@@ -417,7 +417,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import api from '@/services/api'
+import { onMounted, ref } from 'vue'
 import { Cropper } from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
 
@@ -437,18 +438,21 @@ interface Yetenek {
   deger: number
 }
 
-const oyuncular = ref<Oyuncu[]>([
-  {
-    id: 1,
-    adSoyad: 'Ahmet Yılmaz',
-    pozisyon: 'Forvet',
-  },
-  {
-    id: 2,
-    adSoyad: 'Mehmet Demir',
-    pozisyon: 'Defans',
-  },
-])
+const oyuncular = ref<Oyuncu[]>([])
+
+// Oyuncuları yükle
+const oyunculariYukle = async () => {
+  try {
+    oyuncular.value = await api.getOyuncular()
+  } catch (error) {
+    console.error('Oyuncular yüklenirken hata oluştu:', error)
+  }
+}
+
+// Component yüklendiğinde oyuncuları getir
+onMounted(() => {
+  oyunculariYukle()
+})
 
 const pozisyonlar = [
   'Kaleci',
@@ -463,6 +467,8 @@ const yeniOyuncu = ref({
   adSoyad: '',
   pozisyon: '',
   resim: '',
+  yetenekler: {},
+  guc: 0
 })
 
 // Düzenleme state'leri
@@ -488,48 +494,48 @@ const activeTab = ref('teknik')
 
 // Yetenekleri kategorilere ayır
 const teknikYetenekler = ref<Yetenek[]>([
-  { ad: 'Corners', deger: 10 },
-  { ad: 'Crossing', deger: 10 },
-  { ad: 'Dribbling', deger: 10 },
-  { ad: 'Finishing', deger: 10 },
-  { ad: 'First Touch', deger: 10 },
-  { ad: 'Free Kick Taking', deger: 10 },
-  { ad: 'Heading', deger: 10 },
-  { ad: 'Long Shots', deger: 10 },
-  { ad: 'Long Throws', deger: 10 },
-  { ad: 'Marking', deger: 10 },
-  { ad: 'Passing', deger: 10 },
-  { ad: 'Penalty Taking', deger: 10 },
-  { ad: 'Tackling', deger: 10 },
-  { ad: 'Technique', deger: 10 },
+  { ad: 'Bitiricilik', deger: 10 },
+  { ad: 'Dripling', deger: 10 },
+  { ad: 'İlk Kontrol', deger: 10 },
+  { ad: 'Kafa Vuruşu', deger: 10 },
+  { ad: 'Korner', deger: 10 },
+  { ad: 'Markaj', deger: 10 },
+  { ad: 'Orta Yapma', deger: 10 },
+  { ad: 'Pas', deger: 10 },
+  { ad: 'Penaltı Kullanma', deger: 10 },
+  { ad: 'Serbest Vuruş Kullanma', deger: 10 },
+  { ad: 'Teknik', deger: 10 },
+  { ad: 'Top Kapma', deger: 10 },
+  { ad: 'Uzaktan Şut', deger: 10 },
+  { ad: 'Uzun Taç', deger: 10 },
 ])
 
 const mentalYetenekler = ref<Yetenek[]>([
-  { ad: 'Aggression', deger: 10 },
-  { ad: 'Anticipation', deger: 10 },
-  { ad: 'Bravery', deger: 10 },
-  { ad: 'Composure', deger: 10 },
-  { ad: 'Concentration', deger: 10 },
-  { ad: 'Decisions', deger: 10 },
-  { ad: 'Determination', deger: 10 },
-  { ad: 'Flair', deger: 10 },
-  { ad: 'Leadership', deger: 10 },
-  { ad: 'Off The Ball', deger: 10 },
-  { ad: 'Positioning', deger: 10 },
-  { ad: 'Teamwork', deger: 10 },
-  { ad: 'Vision', deger: 10 },
-  { ad: 'Work Rate', deger: 10 },
+  { ad: 'Agresiflik', deger: 10 },
+  { ad: 'Cesaret', deger: 10 },
+  { ad: 'Çalışkanlık', deger: 10 },
+  { ad: 'Karar Alma', deger: 10 },
+  { ad: 'Kararlılık', deger: 10 },
+  { ad: 'Konsantrasyon', deger: 10 },
+  { ad: 'Liderlik', deger: 10 },
+  { ad: 'Önsezi', deger: 10 },
+  { ad: 'Özel Yetenek', deger: 10 },
+  { ad: 'Pozisyon Alma', deger: 10 },
+  { ad: 'Soğukkanlılık', deger: 10 },
+  { ad: 'Takım Oyunu', deger: 10 },
+  { ad: 'Topsuz Alan', deger: 10 },
+  { ad: 'Vizyon', deger: 10 },
 ])
 
 const fizikselYetenekler = ref<Yetenek[]>([
-  { ad: 'Acceleration', deger: 10 },
-  { ad: 'Agility', deger: 10 },
-  { ad: 'Balance', deger: 10 },
-  { ad: 'Jumping Reach', deger: 10 },
-  { ad: 'Natural Fitness', deger: 10 },
-  { ad: 'Pace', deger: 10 },
-  { ad: 'Stamina', deger: 10 },
-  { ad: 'Strength', deger: 10 },
+  { ad: 'Çeviklik', deger: 10 },
+  { ad: 'Dayanıklılık', deger: 10 },
+  { ad: 'Denge', deger: 10 },
+  { ad: 'Güç', deger: 10 },
+  { ad: 'Hız', deger: 10 },
+  { ad: 'Hızlanma', deger: 10 },
+  { ad: 'Vücut Zindeliği', deger: 10 },
+  { ad: 'Zıplama', deger: 10 },
 ])
 
 // Canlı güç state'i
@@ -559,7 +565,7 @@ const validateInput = (yetenek: Yetenek) => {
 const yetenekleriDuzenle = (oyuncu: Oyuncu) => {
   secilenOyuncu.value = oyuncu
   
-  // Tüm yetenekleri sıfırla ve varsayılan değer olarak 10 ata
+  // Veritabanından gelen yetenekleri kullan veya varsayılan değerleri ata
   teknikYetenekler.value.forEach(yetenek => {
     yetenek.deger = oyuncu.yetenekler?.[yetenek.ad] ?? 10
   })
@@ -573,29 +579,38 @@ const yetenekleriDuzenle = (oyuncu: Oyuncu) => {
   })
   
   yeteneklerDialog.value = true
-  hesaplaCanlıGuc()
+  // Veritabanından gelen güç değerini kullan
+  canliGuc.value = oyuncu.guc || 0
 }
 
-const kaydetOyuncu = () => {
-  const yeteneklerObj: { [key: string]: number } = {}
-  
-  // Tüm yetenekleri 10 olarak ayarla
-  ;[...teknikYetenekler.value, ...mentalYetenekler.value, ...fizikselYetenekler.value].forEach(yetenek => {
-    yeteneklerObj[yetenek.ad] = 10
-  })
-  
-  oyuncular.value.push({
-    id: oyuncular.value.length + 1,
-    ...yeniOyuncu.value,
-    yetenekler: yeteneklerObj,
-    guc: hesaplaOyuncuGucu(yeteneklerObj, yeniOyuncu.value.pozisyon),
-  })
-  
-  yeniOyuncuDialog.value = false
-  yeniOyuncu.value = {
-    adSoyad: '',
-    pozisyon: '',
-    resim: '',
+const kaydetOyuncu = async () => {
+  try {
+    const yeteneklerObj: { [key: string]: number } = {}
+    
+    // Tüm yetenekleri 10 olarak ayarla
+    ;[...teknikYetenekler.value, ...mentalYetenekler.value, ...fizikselYetenekler.value].forEach(yetenek => {
+      yeteneklerObj[yetenek.ad] = 10
+    })
+    
+    const yeniOyuncuData = {
+      ...yeniOyuncu.value,
+      yetenekler: yeteneklerObj,
+      guc: hesaplaOyuncuGucu(yeteneklerObj, yeniOyuncu.value.pozisyon),
+    }
+    
+    await api.createOyuncu(yeniOyuncuData)
+    await oyunculariYukle() // Listeyi güncelle
+    
+    yeniOyuncuDialog.value = false
+    yeniOyuncu.value = {
+      adSoyad: '',
+      pozisyon: '',
+      resim: '',
+      yetenekler: {},
+      guc: 0
+    }
+  } catch (error) {
+    console.error('Oyuncu kaydedilirken hata oluştu:', error)
   }
 }
 
@@ -604,38 +619,46 @@ const duzenleOyuncu = (oyuncu: Oyuncu) => {
   duzenleDialog.value = true
 }
 
-const kaydetDuzenleme = () => {
-  const index = oyuncular.value.findIndex(o => o.id === duzenleOyuncuData.value.id)
-  if (index !== -1) {
-    oyuncular.value[index] = { ...duzenleOyuncuData.value }
-  }
-  duzenleDialog.value = false
-}
-
-const silOyuncu = (id: number) => {
-  const index = oyuncular.value.findIndex(o => o.id === id)
-  if (index !== -1) {
-    oyuncular.value.splice(index, 1)
+const kaydetDuzenleme = async () => {
+  try {
+    await api.updateOyuncu(duzenleOyuncuData.value.id, duzenleOyuncuData.value)
+    await oyunculariYukle() // Listeyi güncelle
+    duzenleDialog.value = false
+  } catch (error) {
+    console.error('Oyuncu güncellenirken hata oluştu:', error)
   }
 }
 
-const yetenekleriKaydet = () => {
+const silOyuncu = async (id: number) => {
+  try {
+    await api.deleteOyuncu(id)
+    await oyunculariYukle() // Listeyi güncelle
+  } catch (error) {
+    console.error('Oyuncu silinirken hata oluştu:', error)
+  }
+}
+
+const yetenekleriKaydet = async () => {
   if (secilenOyuncu.value) {
-    const yeteneklerObj: { [key: string]: number } = {}
-    
-    // Tüm kategorilerdeki yetenekleri birleştir
-    ;[...teknikYetenekler.value, ...mentalYetenekler.value, ...fizikselYetenekler.value].forEach(yetenek => {
-      yeteneklerObj[yetenek.ad] = Number(yetenek.deger)
-    })
-    
-    const index = oyuncular.value.findIndex(o => o.id === secilenOyuncu.value?.id)
-    if (index !== -1) {
+    try {
+      const yeteneklerObj: { [key: string]: number } = {}
+      
+      // Tüm kategorilerdeki yetenekleri birleştir
+      ;[...teknikYetenekler.value, ...mentalYetenekler.value, ...fizikselYetenekler.value].forEach(yetenek => {
+        yeteneklerObj[yetenek.ad] = Number(yetenek.deger)
+      })
+      
       const guc = hesaplaOyuncuGucu(yeteneklerObj, secilenOyuncu.value.pozisyon)
-      oyuncular.value[index] = {
-        ...oyuncular.value[index],
+      const guncelOyuncu = {
+        ...secilenOyuncu.value,
         yetenekler: yeteneklerObj,
         guc: guc,
       }
+      
+      await api.updateOyuncu(secilenOyuncu.value.id, guncelOyuncu)
+      await oyunculariYukle() // Listeyi güncelle
+    } catch (error) {
+      console.error('Yetenekler kaydedilirken hata oluştu:', error)
     }
   }
   
@@ -657,64 +680,64 @@ const hesaplaOyuncuGucu = (yetenekler: { [key: string]: number }, pozisyon: stri
 
   const katsayilar: { [key: string]: { [key: string]: number } } = {
     'Defans': {
-      'Dribbling': 2,
-      'First Touch': 3,
-      'Heading': 4,
-      'Marking': 5,
-      'Passing': 4,
-      'Tackling': 5,
-      'Technique': 2,
-      'Aggression': 4,
-      'Anticipation': 4,
-      'Bravery': 3,
-      'Composure': 4,
-      'Concentration': 3,
-      'Decisions': 4,
-      'Positioning': 5,
-      'Acceleration': 3,
-      'Agility': 4,
-      'Jumping Reach': 4,
-      'Pace': 4,
-      'Strength': 4,
-      'Stamina': 4,
+      'Dripling': 2,
+      'İlk Kontrol': 3,
+      'Kafa Vuruşu': 4,
+      'Markaj': 5,
+      'Pas': 4,
+      'Top Kapma': 5,
+      'Teknik': 2,
+      'Agresiflik': 4,
+      'Önsezi': 4,
+      'Cesaret': 3,
+      'Soğukkanlılık': 4,
+      'Konsantrasyon': 3,
+      'Karar Alma': 4,
+      'Pozisyon Alma': 5,
+      'Hızlanma': 3,
+      'Çeviklik': 4,
+      'Zıplama': 4,
+      'Hız': 4,
+      'Güç': 4,
+      'Dayanıklılık': 4,
     },
     'Orta Saha': {
-      'Corners': 2,
-      'Dribbling': 3,
-      'Finishing': 3,
-      'First Touch': 4,
-      'Free Kick Taking': 2,
-      'Long Shots': 4,
-      'Marking': 2,
-      'Passing': 5,
-      'Tackling': 3,
-      'Technique': 5,
-      'Aggression': 3,
-      'Decisions': 4,
-      'Off The Ball': 5,
-      'Positioning': 4,
-      'Vision': 4,
-      'Acceleration': 4,
-      'Agility': 3,
-      'Balance': 3,
-      'Pace': 3,
-      'Stamina': 5,
-      'Strength': 4,
+      'Korner': 2,
+      'Dripling': 3,
+      'Bitiricilik': 3,
+      'İlk Kontrol': 4,
+      'Serbest Vuruş Kullanma': 2,
+      'Uzaktan Şut': 4,
+      'Markaj': 2,
+      'Pas': 5,
+      'Top Kapma': 3,
+      'Teknik': 5,
+      'Agresiflik': 3,
+      'Karar Alma': 4,
+      'Topsuz Alan': 5,
+      'Pozisyon Alma': 4,
+      'Vizyon': 4,
+      'Hızlanma': 4,
+      'Çeviklik': 3,
+      'Denge': 3,
+      'Hız': 3,
+      'Dayanıklılık': 5,
+      'Güç': 4,
     },
     'Forvet': {
-      'Dribbling': 4,
-      'Finishing': 5,
-      'First Touch': 3,
-      'Passing': 3,
-      'Technique': 3,
-      'Decisions': 4,
-      'Off The Ball': 5,
-      'Pace': 4,
-      'Acceleration': 5,
-      'Agility': 5,
-      'Balance': 3,
-      'Jumping Reach': 3,
-      'Strength': 4,
+      'Dripling': 4,
+      'Bitiricilik': 5,
+      'İlk Kontrol': 3,
+      'Pas': 3,
+      'Teknik': 3,
+      'Karar Alma': 4,
+      'Topsuz Alan': 5,
+      'Hız': 4,
+      'Hızlanma': 5,
+      'Çeviklik': 5,
+      'Denge': 3,
+      'Zıplama': 3,
+      'Güç': 4,
     }
   }
 
@@ -765,7 +788,38 @@ const resimDegisti = ({ coordinates, canvas }: any) => {
 
 const resimKirp = () => {
   if (cropperRef.value) {
-    const kirpilanResim = cropperRef.value.toDataURL()
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const maxBoyut = 200
+
+    // Orijinal resmi al
+    const orijinalCanvas = cropperRef.value
+    const orijinalGenislik = orijinalCanvas.width
+    const orijinalYukseklik = orijinalCanvas.height
+
+    // En büyük boyutu 200px olacak şekilde oranla
+    let yeniGenislik = orijinalGenislik
+    let yeniYukseklik = orijinalYukseklik
+
+    if (orijinalGenislik > maxBoyut || orijinalYukseklik > maxBoyut) {
+      if (orijinalGenislik > orijinalYukseklik) {
+        yeniGenislik = maxBoyut
+        yeniYukseklik = Math.round(orijinalYukseklik * (maxBoyut / orijinalGenislik))
+      } else {
+        yeniYukseklik = maxBoyut
+        yeniGenislik = Math.round(orijinalGenislik * (maxBoyut / orijinalYukseklik))
+      }
+    }
+
+    // Canvas boyutlarını ayarla
+    canvas.width = yeniGenislik
+    canvas.height = yeniYukseklik
+
+    // Resmi yeniden boyutlandır
+    ctx?.drawImage(orijinalCanvas, 0, 0, yeniGenislik, yeniYukseklik)
+
+    // Küçültülmüş resmi base64 formatına çevir
+    const kirpilanResim = canvas.toDataURL('image/jpeg', 0.8)
     
     if (resimModu.value === 'yeni') {
       yeniOyuncu.value.resim = kirpilanResim
