@@ -39,6 +39,14 @@
                 </VBtn>
                 <VBtn
                   size="small"
+                  color="info"
+                  class="me-2"
+                  @click="yetenekleriDuzenle(oyuncu)"
+                >
+                  Yetenekler
+                </VBtn>
+                <VBtn
+                  size="small"
                   color="error"
                   @click="silOyuncu(oyuncu.id)"
                 >
@@ -263,6 +271,160 @@
             </VCardActions>
           </VCard>
         </VDialog>
+
+        <!-- Yetenekler Dialog -->
+        <VDialog v-model="yeteneklerDialog" max-width="1200px">
+          <VCard>
+            <VCardTitle class="text-h5 pa-4 bg-info text-white">
+              <div class="d-flex align-center">
+                <VAvatar size="48" class="me-3 elevation-2">
+                  <VImg
+                    v-if="secilenOyuncu?.resim"
+                    :src="secilenOyuncu.resim"
+                    alt="Oyuncu resmi"
+                  />
+                  <VIcon
+                    v-else
+                    icon="tabler-user"
+                    size="32"
+                  />
+                </VAvatar>
+                <div>
+                  <VIcon icon="tabler-star" class="me-2" />
+                  Oyuncu Yetenekleri - {{ secilenOyuncu?.adSoyad }}
+                </div>
+              </div>
+            </VCardTitle>
+            <VCardText class="pa-6">
+              <VTabs v-model="activeTab" color="info" grow class="mb-6">
+                <VTab value="teknik">
+                  <VIcon icon="tabler-tool" class="me-2" />
+                  Teknik
+                </VTab>
+                <VTab value="mental">
+                  <VIcon icon="tabler-brain" class="me-2" />
+                  Mental
+                </VTab>
+                <VTab value="fiziksel">
+                  <VIcon icon="tabler-run" class="me-2" />
+                  Fiziksel
+                </VTab>
+              </VTabs>
+
+              <VWindow v-model="activeTab" class="mt-4">
+                <!-- Teknik Yetenekler -->
+                <VWindowItem value="teknik">
+                  <VRow class="mt-2">
+                    <VCol cols="3" v-for="yetenek in teknikYetenekler" :key="yetenek.ad" class="pa-4">
+                      <div class="d-flex align-center">
+                        <VTextField
+                          v-model="yetenek.deger"
+                          :label="yetenek.ad"
+                          type="number"
+                          min="0"
+                          max="20"
+                          :rules="[v => (v >= 0 && v <= 20) || 'Değer 0-20 arasında olmalıdır']"
+                          :color="yetenekRengi(Number(yetenek.deger))"
+                          density="compact"
+                          class="me-2"
+                          style="width: 150px"
+                          variant="outlined"
+                          hide-details
+                          @input="validateInput(yetenek)"
+                        />
+                        <span :class="['text-caption font-weight-medium', 'text-' + yetenekRengi(Number(yetenek.deger))]">
+                          /20
+                        </span>
+                      </div>
+                    </VCol>
+                  </VRow>
+                </VWindowItem>
+
+                <!-- Mental Yetenekler -->
+                <VWindowItem value="mental">
+                  <VRow class="mt-2">
+                    <VCol cols="3" v-for="yetenek in mentalYetenekler" :key="yetenek.ad" class="pa-4">
+                      <div class="d-flex align-center">
+                        <VTextField
+                          v-model="yetenek.deger"
+                          :label="yetenek.ad"
+                          type="number"
+                          min="0"
+                          max="20"
+                          :rules="[v => (v >= 0 && v <= 20) || 'Değer 0-20 arasında olmalıdır']"
+                          :color="yetenekRengi(Number(yetenek.deger))"
+                          density="compact"
+                          class="me-2"
+                          style="width: 150px"
+                          variant="outlined"
+                          hide-details
+                          @input="validateInput(yetenek)"
+                        />
+                        <span :class="['text-caption font-weight-medium', 'text-' + yetenekRengi(Number(yetenek.deger))]">
+                          /20
+                        </span>
+                      </div>
+                    </VCol>
+                  </VRow>
+                </VWindowItem>
+
+                <!-- Fiziksel Yetenekler -->
+                <VWindowItem value="fiziksel">
+                  <VRow class="mt-2">
+                    <VCol cols="3" v-for="yetenek in fizikselYetenekler" :key="yetenek.ad" class="pa-4">
+                      <div class="d-flex align-center">
+                        <VTextField
+                          v-model="yetenek.deger"
+                          :label="yetenek.ad"
+                          type="number"
+                          min="0"
+                          max="20"
+                          :rules="[v => (v >= 0 && v <= 20) || 'Değer 0-20 arasında olmalıdır']"
+                          :color="yetenekRengi(Number(yetenek.deger))"
+                          density="compact"
+                          class="me-2"
+                          style="width: 150px"
+                          variant="outlined"
+                          hide-details
+                          @input="validateInput(yetenek)"
+                        />
+                        <span :class="['text-caption font-weight-medium', 'text-' + yetenekRengi(Number(yetenek.deger))]">
+                          /20
+                        </span>
+                      </div>
+                    </VCol>
+                  </VRow>
+                </VWindowItem>
+              </VWindow>
+            </VCardText>
+            <VDivider />
+            <VCardActions class="pa-4">
+              <div class="text-body-2">
+                Değerler: 
+                <span class="text-error font-weight-medium">0-9 Zayıf</span> |
+                <span class="text-info font-weight-medium">10-14 Orta</span> |
+                <span class="text-success font-weight-medium">15-20 İyi</span>
+              </div>
+              <VSpacer />
+              <VBtn
+                color="error"
+                variant="outlined"
+                prepend-icon="tabler-x"
+                @click="yeteneklerDialog = false"
+              >
+                İptal
+              </VBtn>
+              <VBtn
+                color="success"
+                prepend-icon="tabler-device-floppy"
+                @click="yetenekleriKaydet"
+                class="ms-2"
+              >
+                Kaydet
+              </VBtn>
+            </VCardActions>
+          </VCard>
+        </VDialog>
       </VCardText>
     </VCard>
   </div>
@@ -278,6 +440,14 @@ interface Oyuncu {
   adSoyad: string
   pozisyon: string
   resim?: string
+  yetenekler?: {
+    [key: string]: number
+  }
+}
+
+interface Yetenek {
+  ad: string
+  deger: number
 }
 
 const oyuncular = ref<Oyuncu[]>([
@@ -323,6 +493,69 @@ const seciliResim = ref('')
 const resimModu = ref<'yeni' | 'duzenle'>('yeni')
 const cropperRef = ref()
 const resimInput = ref()
+
+// Yetenekler state'leri
+const yeteneklerDialog = ref(false)
+const secilenOyuncu = ref<Oyuncu | null>(null)
+const activeTab = ref('teknik')
+
+// Yetenekleri kategorilere ayır
+const teknikYetenekler = ref<Yetenek[]>([
+  { ad: 'Corners', deger: 0 },
+  { ad: 'Crossing', deger: 0 },
+  { ad: 'Dribbling', deger: 0 },
+  { ad: 'Finishing', deger: 0 },
+  { ad: 'First Touch', deger: 0 },
+  { ad: 'Free Kick Taking', deger: 0 },
+  { ad: 'Heading', deger: 0 },
+  { ad: 'Long Shots', deger: 0 },
+  { ad: 'Long Throws', deger: 0 },
+  { ad: 'Marking', deger: 0 },
+  { ad: 'Passing', deger: 0 },
+  { ad: 'Penalty Taking', deger: 0 },
+  { ad: 'Tackling', deger: 0 },
+  { ad: 'Technique', deger: 0 },
+])
+
+const mentalYetenekler = ref<Yetenek[]>([
+  { ad: 'Aggression', deger: 0 },
+  { ad: 'Anticipation', deger: 0 },
+  { ad: 'Bravery', deger: 0 },
+  { ad: 'Composure', deger: 0 },
+  { ad: 'Concentration', deger: 0 },
+  { ad: 'Decisions', deger: 0 },
+  { ad: 'Determination', deger: 0 },
+  { ad: 'Flair', deger: 0 },
+  { ad: 'Leadership', deger: 0 },
+  { ad: 'Off The Ball', deger: 0 },
+  { ad: 'Positioning', deger: 0 },
+  { ad: 'Teamwork', deger: 0 },
+  { ad: 'Vision', deger: 0 },
+  { ad: 'Work Rate', deger: 0 },
+])
+
+const fizikselYetenekler = ref<Yetenek[]>([
+  { ad: 'Acceleration', deger: 0 },
+  { ad: 'Agility', deger: 0 },
+  { ad: 'Balance', deger: 0 },
+  { ad: 'Jumping Reach', deger: 0 },
+  { ad: 'Natural Fitness', deger: 0 },
+  { ad: 'Pace', deger: 0 },
+  { ad: 'Stamina', deger: 0 },
+  { ad: 'Strength', deger: 0 },
+])
+
+const validateInput = (yetenek: Yetenek) => {
+  let value = Number(yetenek.deger)
+  if (value < 0) yetenek.deger = 0
+  if (value > 20) yetenek.deger = 20
+}
+
+const yetenekRengi = (deger: number) => {
+  if (deger >= 15) return 'success'
+  if (deger >= 10) return 'info'
+  return 'error'
+}
 
 const resimDialogAc = (mod: 'yeni' | 'duzenle') => {
   resimModu.value = mod
@@ -394,6 +627,40 @@ const silOyuncu = (id: number) => {
   if (index !== -1) {
     oyuncular.value.splice(index, 1)
   }
+}
+
+const yetenekleriDuzenle = (oyuncu: Oyuncu) => {
+  secilenOyuncu.value = oyuncu
+  
+  // Mevcut yetenekleri yükle
+  if (oyuncu.yetenekler) {
+    [...teknikYetenekler.value, ...mentalYetenekler.value, ...fizikselYetenekler.value].forEach(yetenek => {
+      yetenek.deger = oyuncu.yetenekler?.[yetenek.ad] || 0
+    })
+  }
+  
+  yeteneklerDialog.value = true
+}
+
+const yetenekleriKaydet = () => {
+  if (secilenOyuncu.value) {
+    const yeteneklerObj: { [key: string]: number } = {}
+    
+    // Tüm kategorilerdeki yetenekleri birleştir
+    ;[...teknikYetenekler.value, ...mentalYetenekler.value, ...fizikselYetenekler.value].forEach(yetenek => {
+      yeteneklerObj[yetenek.ad] = Number(yetenek.deger)
+    })
+    
+    const index = oyuncular.value.findIndex(o => o.id === secilenOyuncu.value?.id)
+    if (index !== -1) {
+      oyuncular.value[index] = {
+        ...oyuncular.value[index],
+        yetenekler: yeteneklerObj,
+      }
+    }
+  }
+  
+  yeteneklerDialog.value = false
 }
 </script>
 
