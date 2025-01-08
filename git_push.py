@@ -4,6 +4,14 @@ from datetime import datetime
 
 def git_push():
     try:
+        # Önce git status kontrolü yap
+        status = subprocess.run(['git', 'status', '--porcelain'], capture_output=True, text=True, check=True)
+        
+        # Eğer değişiklik yoksa
+        if not status.stdout.strip():
+            print("ℹ️ Commit edilecek değişiklik yok.")
+            return
+        
         # Git komutlarını çalıştır
         subprocess.run(['git', 'add', '.'], check=True)
         
