@@ -12,11 +12,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Veritabanı şemasını oluştur
 const initDatabase = async () => {
   try {
-    // Eğer tablolar varsa sil
-    await db.query('DROP TABLE IF EXISTS oyuncu_ozellikleri');
-    await db.query('DROP TABLE IF EXISTS oyuncular');
-    
-    // Oyuncular tablosunu oluştur
+    // Oyuncular tablosunu oluştur (eğer yoksa)
     await db.query(`
       CREATE TABLE IF NOT EXISTS oyuncular (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -29,7 +25,7 @@ const initDatabase = async () => {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
-    // Oyuncu özellikleri tablosunu oluştur
+    // Oyuncu özellikleri tablosunu oluştur (eğer yoksa)
     await db.query(`
       CREATE TABLE IF NOT EXISTS oyuncu_ozellikleri (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -42,7 +38,7 @@ const initDatabase = async () => {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     
-    console.log('Veritabanı şeması başarıyla oluşturuldu');
+    console.log('Veritabanı şeması kontrol edildi');
   } catch (error) {
     console.error('Veritabanı şeması oluşturulurken hata:', error);
     process.exit(1);
