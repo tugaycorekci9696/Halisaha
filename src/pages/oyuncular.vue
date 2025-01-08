@@ -2,33 +2,42 @@
   <div>
     <VCard title="Oyuncular 👥">
       <VCardText>
-        <VTable>
+        <VTable class="oyuncular-table">
           <thead>
             <tr>
-              <th>Fotoğraf</th>
+              <th class="d-none d-sm-table-cell">Fotoğraf</th>
               <th>Adı Soyadı</th>
-              <th>Pozisyon</th>
+              <th class="d-none d-md-table-cell">Pozisyon</th>
               <th>Güç</th>
               <th>İşlemler</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="oyuncu in oyuncular" :key="oyuncu.id">
-              <td>
+              <td class="d-none d-sm-table-cell">
                 <VAvatar size="40">
                   <VImg
                     v-if="oyuncu.resim"
                     :src="oyuncu.resim"
                     alt="Oyuncu resmi"
                   />
-                  <VIcon
-                    v-else
-                    icon="tabler-user"
-                  />
+                  <VIcon v-else icon="tabler-user" />
                 </VAvatar>
               </td>
-              <td>{{ oyuncu.adSoyad }}</td>
-              <td>{{ oyuncu.pozisyon }}</td>
+              <td>
+                <div class="d-flex align-center">
+                  <VAvatar size="32" class="d-sm-none me-2">
+                    <VImg
+                      v-if="oyuncu.resim"
+                      :src="oyuncu.resim"
+                      alt="Oyuncu resmi"
+                    />
+                    <VIcon v-else icon="tabler-user" />
+                  </VAvatar>
+                  {{ oyuncu.adSoyad }}
+                </div>
+              </td>
+              <td class="d-none d-md-table-cell">{{ oyuncu.pozisyon }}</td>
               <td>
                 <VChip
                   :color="oyuncuGucRengi(oyuncu.guc)"
@@ -38,29 +47,35 @@
                 </VChip>
               </td>
               <td>
-                <VBtn
-                  size="small"
-                  color="primary"
-                  class="me-2"
-                  @click="duzenleOyuncu(oyuncu)"
-                >
-                  Düzenle
-                </VBtn>
-                <VBtn
-                  size="small"
-                  color="info"
-                  class="me-2"
-                  @click="yetenekleriDuzenle(oyuncu)"
-                >
-                  Yetenekler
-                </VBtn>
-                <VBtn
-                  size="small"
-                  color="error"
-                  @click="silOyuncu(oyuncu.id)"
-                >
-                  Sil
-                </VBtn>
+                <div class="d-flex flex-wrap gap-2">
+                  <VBtn
+                    size="small"
+                    color="primary"
+                    class="flex-grow-0"
+                    @click="duzenleOyuncu(oyuncu)"
+                  >
+                    <VIcon size="small" icon="tabler-edit" class="d-sm-none" />
+                    <span class="d-none d-sm-block">Düzenle</span>
+                  </VBtn>
+                  <VBtn
+                    size="small"
+                    color="info"
+                    class="flex-grow-0"
+                    @click="yetenekleriDuzenle(oyuncu)"
+                  >
+                    <VIcon size="small" icon="tabler-star" class="d-sm-none" />
+                    <span class="d-none d-sm-block">Yetenekler</span>
+                  </VBtn>
+                  <VBtn
+                    size="small"
+                    color="error"
+                    class="flex-grow-0"
+                    @click="silOyuncu(oyuncu.id)"
+                  >
+                    <VIcon size="small" icon="tabler-trash" class="d-sm-none" />
+                    <span class="d-none d-sm-block">Sil</span>
+                  </VBtn>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -282,12 +297,12 @@
         </VDialog>
 
         <!-- Yetenekler Dialog -->
-        <VDialog v-model="yeteneklerDialog" max-width="1200px">
+        <VDialog v-model="yeteneklerDialog" :max-width="$vuetify.display.mdAndUp ? '1200px' : '100%'" :fullscreen="$vuetify.display.smAndDown">
           <VCard>
             <VCardTitle class="text-h5 pa-4 bg-info text-white">
-              <div class="d-flex align-center justify-space-between">
+              <div class="d-flex align-center justify-space-between flex-wrap gap-4">
                 <div class="d-flex align-center">
-                  <VAvatar size="48" class="me-3 elevation-2">
+                  <VAvatar :size="$vuetify.display.smAndDown ? 40 : 48" class="me-3 elevation-2">
                     <VImg
                       v-if="secilenOyuncu?.resim"
                       :src="secilenOyuncu.resim"
@@ -296,10 +311,10 @@
                     <VIcon
                       v-else
                       icon="tabler-user"
-                      size="32"
+                      :size="$vuetify.display.smAndDown ? 24 : 32"
                     />
                   </VAvatar>
-                  <div>
+                  <div class="text-truncate">
                     <VIcon icon="tabler-star" class="me-2" />
                     Oyuncu Yetenekleri - {{ secilenOyuncu?.adSoyad }}
                   </div>
@@ -313,26 +328,26 @@
                 </VChip>
               </div>
             </VCardTitle>
-            <VCardText class="pa-6">
+            <VCardText :class="$vuetify.display.smAndDown ? 'pa-2' : 'pa-6'">
               <VTabs v-model="activeTab" color="primary" grow class="mb-6">
                 <VTab value="teknik" class="text-none">
                   <VIcon icon="tabler-tool" class="me-2" />
-                  Teknik
+                  <span class="d-none d-sm-block">Teknik</span>
                 </VTab>
                 <VTab value="mental" class="text-none">
                   <VIcon icon="tabler-brain" class="me-2" />
-                  Mental
+                  <span class="d-none d-sm-block">Mental</span>
                 </VTab>
                 <VTab value="fiziksel" class="text-none">
                   <VIcon icon="tabler-run" class="me-2" />
-                  Fiziksel
+                  <span class="d-none d-sm-block">Fiziksel</span>
                 </VTab>
               </VTabs>
 
               <VWindow v-model="activeTab">
                 <VWindowItem v-for="(kategori, index) in ['teknik', 'mental', 'fiziksel']" :key="index" :value="kategori">
                   <VRow>
-                    <VCol cols="6" v-for="(yetenek, i) in getKategoriYetenekleri(kategori)" :key="i">
+                    <VCol :cols="$vuetify.display.smAndDown ? 12 : 6" v-for="(yetenek, i) in getKategoriYetenekleri(kategori)" :key="i">
                       <div class="yetenek-container">
                         <span class="yetenek-label">{{ yetenek.ad }}</span>
                         <div class="d-flex align-center">
@@ -343,7 +358,7 @@
                             @click="yetenek.deger = Math.max(0, Number(yetenek.deger) - 1); hesaplaCanlıGuc()"
                             class="yetenek-btn"
                           >
-                            <VIcon size="20">tabler-minus</VIcon>
+                            <VIcon :size="$vuetify.display.smAndDown ? 16 : 20">tabler-minus</VIcon>
                           </VBtn>
                           
                           <div class="yetenek-deger" :class="yetenekDegerRengi(yetenek.deger)">
@@ -357,7 +372,7 @@
                             @click="yetenek.deger = Math.min(20, Number(yetenek.deger) + 1); hesaplaCanlıGuc()"
                             class="yetenek-btn"
                           >
-                            <VIcon size="20">tabler-plus</VIcon>
+                            <VIcon :size="$vuetify.display.smAndDown ? 16 : 20">tabler-plus</VIcon>
                           </VBtn>
                         </div>
                       </div>
@@ -367,8 +382,8 @@
               </VWindow>
             </VCardText>
             <VDivider />
-            <VCardActions class="pa-4">
-              <div class="text-body-2">
+            <VCardActions :class="$vuetify.display.smAndDown ? 'pa-2 flex-wrap gap-2' : 'pa-4'">
+              <div class="text-body-2 d-none d-sm-block">
                 Değerler: 
                 <span class="text-error font-weight-medium">0-9 Zayıf</span> |
                 <span class="text-info font-weight-medium">10-14 Orta</span> |
@@ -380,6 +395,7 @@
                 variant="outlined"
                 prepend-icon="tabler-x"
                 @click="yeteneklerDialog = false"
+                :block="$vuetify.display.smAndDown"
               >
                 İptal
               </VBtn>
@@ -387,7 +403,8 @@
                 color="success"
                 prepend-icon="tabler-device-floppy"
                 @click="yetenekleriKaydet"
-                class="ms-2"
+                :class="$vuetify.display.smAndDown ? 'mt-2' : 'ms-2'"
+                :block="$vuetify.display.smAndDown"
               >
                 Kaydet
               </VBtn>
@@ -847,5 +864,58 @@ const yetenekDegerRengi = (deger: number) => {
   color: #C62828 !important;
   background-color: #FFEBEE !important;
   border-color: #EF9A9A !important;
+}
+
+/* Responsive styles */
+.oyuncular-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+  .yetenek-container {
+    padding: 4px 8px;
+    margin-bottom: 4px;
+  }
+
+  .yetenek-label {
+    font-size: 0.875rem;
+  }
+
+  .yetenek-deger {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+    margin: 0 4px;
+  }
+
+  .yetenek-btn {
+    width: 32px !important;
+    height: 32px !important;
+  }
+}
+
+/* Tablet ve üstü için stil ayarlamaları */
+@media (min-width: 960px) {
+  .yetenek-container {
+    padding: 12px 24px;
+    margin-bottom: 12px;
+  }
+
+  .yetenek-label {
+    font-size: 1.1rem;
+  }
+
+  .yetenek-deger {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+    margin: 0 12px;
+  }
+
+  .yetenek-btn {
+    width: 42px !important;
+    height: 42px !important;
+  }
 }
 </style> 
