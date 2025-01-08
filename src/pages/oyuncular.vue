@@ -7,7 +7,7 @@
             <tr>
               <th class="d-none d-sm-table-cell">Fotoğraf</th>
               <th>Adı Soyadı</th>
-              <th class="d-none d-md-table-cell">Pozisyon</th>
+              <th>Pozisyonlar</th>
               <th>Güç</th>
               <th>İşlemler</th>
             </tr>
@@ -37,7 +37,19 @@
                   {{ oyuncu.adSoyad }}
                 </div>
               </td>
-              <td class="d-none d-md-table-cell">{{ oyuncu.pozisyon }}</td>
+              <td>
+                <div class="positions-preview">
+                  <template v-if="oyuncu.pozisyonlar">
+                    <template v-for="(seviye, poz) in oyuncu.pozisyonlar" :key="poz">
+                      <div v-if="Number(seviye) >= 3"
+                           :class="['position-mini-box', `level-${seviye}`]"
+                           :title="getPozisyonAciklama(poz, seviye)">
+                        {{ poz }}
+                      </div>
+                    </template>
+                  </template>
+                </div>
+              </td>
               <td>
                 <VChip
                   :color="oyuncuGucRengi(oyuncu.guc)"
@@ -135,15 +147,103 @@
                   class="mb-4"
                   required
                 />
-                <VSelect
-                  v-model="yeniOyuncu.pozisyon"
-                  :items="pozisyonlar"
-                  label="Pozisyon"
-                  variant="outlined"
-                  prepend-inner-icon="tabler-soccer-field"
-                  class="mb-4"
-                  required
-                />
+
+                <!-- Pozisyon Seviyeleri -->
+                <div class="position-selector mb-4">
+                  <div class="text-h6 mb-2">Pozisyon Seviyeleri</div>
+                  <div class="football-field">
+                    <!-- Forvet Hattı -->
+                    <div class="position-row">
+                      <div class="position-box"
+                           :class="getPosClass('ST')"
+                           @click="togglePosition('ST')">
+                        ST
+                      </div>
+                    </div>
+                    <!-- Ofansif Orta Saha Hattı -->
+                    <div class="position-row">
+                      <div class="position-box"
+                           :class="getPosClass('LW')"
+                           @click="togglePosition('LW')">
+                        LW
+                      </div>
+                      <div class="position-box"
+                           :class="getPosClass('OOS')"
+                           @click="togglePosition('OOS')">
+                        OOS
+                      </div>
+                      <div class="position-box"
+                           :class="getPosClass('RW')"
+                           @click="togglePosition('RW')">
+                        RW
+                      </div>
+                    </div>
+                    <!-- Orta Saha Hattı -->
+                    <div class="position-row">
+                      <div class="position-box"
+                           :class="getPosClass('CM')"
+                           @click="togglePosition('CM')">
+                        CM
+                      </div>
+                    </div>
+                    <!-- Defansif Orta Saha Hattı -->
+                    <div class="position-row">
+                      <div class="position-box"
+                           :class="getPosClass('DM')"
+                           @click="togglePosition('DM')">
+                        DM
+                      </div>
+                    </div>
+                    <!-- Defans Hattı -->
+                    <div class="position-row">
+                      <div class="position-box"
+                           :class="getPosClass('DL')"
+                           @click="togglePosition('DL')">
+                        DL
+                      </div>
+                      <div class="position-box"
+                           :class="getPosClass('DC')"
+                           @click="togglePosition('DC')">
+                        DC
+                      </div>
+                      <div class="position-box"
+                           :class="getPosClass('DR')"
+                           @click="togglePosition('DR')">
+                        DR
+                      </div>
+                    </div>
+                    <!-- Kaleci -->
+                    <div class="position-row">
+                      <div class="position-box"
+                           :class="getPosClass('GK')"
+                           @click="togglePosition('GK')">
+                        GK
+                      </div>
+                    </div>
+                  </div>
+                  <div class="position-legend mt-2">
+                    <div class="legend-item">
+                      <div class="legend-box level-5"></div>
+                      <span>Çok İyi</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-box level-4"></div>
+                      <span>İyi</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-box level-3"></div>
+                      <span>Ortalama</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-box level-2"></div>
+                      <span>Kötü</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-box level-1"></div>
+                      <span>Çok Kötü</span>
+                    </div>
+                  </div>
+                </div>
               </VForm>
             </VCardText>
             <VDivider />
@@ -215,15 +315,103 @@
                   class="mb-4"
                   required
                 />
-                <VSelect
-                  v-model="duzenleOyuncuData.pozisyon"
-                  :items="pozisyonlar"
-                  label="Pozisyon"
-                  variant="outlined"
-                  prepend-inner-icon="tabler-soccer-field"
-                  class="mb-4"
-                  required
-                />
+
+                <!-- Pozisyon Seviyeleri -->
+                <div class="position-selector mb-4">
+                  <div class="text-h6 mb-2">Pozisyon Seviyeleri</div>
+                  <div class="football-field">
+                    <!-- Forvet Hattı -->
+                    <div class="position-row">
+                      <div class="position-box"
+                           :class="getDuzenleClass('ST')"
+                           @click="toggleDuzenlePosition('ST')">
+                        ST
+                      </div>
+                    </div>
+                    <!-- Ofansif Orta Saha Hattı -->
+                    <div class="position-row">
+                      <div class="position-box"
+                           :class="getDuzenleClass('LW')"
+                           @click="toggleDuzenlePosition('LW')">
+                        LW
+                      </div>
+                      <div class="position-box"
+                           :class="getDuzenleClass('OOS')"
+                           @click="toggleDuzenlePosition('OOS')">
+                        OOS
+                      </div>
+                      <div class="position-box"
+                           :class="getDuzenleClass('RW')"
+                           @click="toggleDuzenlePosition('RW')">
+                        RW
+                      </div>
+                    </div>
+                    <!-- Orta Saha Hattı -->
+                    <div class="position-row">
+                      <div class="position-box"
+                           :class="getDuzenleClass('CM')"
+                           @click="toggleDuzenlePosition('CM')">
+                        CM
+                      </div>
+                    </div>
+                    <!-- Defansif Orta Saha Hattı -->
+                    <div class="position-row">
+                      <div class="position-box"
+                           :class="getDuzenleClass('DM')"
+                           @click="toggleDuzenlePosition('DM')">
+                        DM
+                      </div>
+                    </div>
+                    <!-- Defans Hattı -->
+                    <div class="position-row">
+                      <div class="position-box"
+                           :class="getDuzenleClass('DL')"
+                           @click="toggleDuzenlePosition('DL')">
+                        DL
+                      </div>
+                      <div class="position-box"
+                           :class="getDuzenleClass('DC')"
+                           @click="toggleDuzenlePosition('DC')">
+                        DC
+                      </div>
+                      <div class="position-box"
+                           :class="getDuzenleClass('DR')"
+                           @click="toggleDuzenlePosition('DR')">
+                        DR
+                      </div>
+                    </div>
+                    <!-- Kaleci -->
+                    <div class="position-row">
+                      <div class="position-box"
+                           :class="getDuzenleClass('GK')"
+                           @click="toggleDuzenlePosition('GK')">
+                        GK
+                      </div>
+                    </div>
+                  </div>
+                  <div class="position-legend mt-2">
+                    <div class="legend-item">
+                      <div class="legend-box level-5"></div>
+                      <span>Çok İyi</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-box level-4"></div>
+                      <span>İyi</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-box level-3"></div>
+                      <span>Ortalama</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-box level-2"></div>
+                      <span>Kötü</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-box level-1"></div>
+                      <span>Çok Kötü</span>
+                    </div>
+                  </div>
+                </div>
               </VForm>
             </VCardText>
             <VDivider />
@@ -299,7 +487,7 @@
         <!-- Yetenekler Dialog -->
         <VDialog v-model="yeteneklerDialog" :max-width="$vuetify.display.mdAndUp ? '1200px' : '100%'" :fullscreen="$vuetify.display.smAndDown">
           <VCard>
-            <VCardTitle class="text-h5 pa-4 bg-info text-white">
+            <VCardTitle class="text-h5 pa-4 bg-white">
               <div class="d-flex align-center justify-space-between flex-wrap gap-4">
                 <div class="d-flex align-center">
                   <VAvatar :size="$vuetify.display.smAndDown ? 40 : 48" class="me-3 elevation-2">
@@ -314,7 +502,7 @@
                       :size="$vuetify.display.smAndDown ? 24 : 32"
                     />
                   </VAvatar>
-                  <div class="text-truncate">
+                  <div class="text-truncate text-black">
                     <VIcon icon="tabler-star" class="me-2" />
                     Oyuncu Yetenekleri - {{ secilenOyuncu?.adSoyad }}
                   </div>
@@ -418,6 +606,7 @@
 
 <script setup lang="ts">
 import api from '@/services/api'
+import axios from 'axios'
 import { onMounted, ref } from 'vue'
 import { Cropper } from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
@@ -425,10 +614,21 @@ import 'vue-advanced-cropper/dist/style.css'
 interface Oyuncu {
   id: number
   adSoyad: string
-  pozisyon: string
   resim?: string
   yetenekler?: {
     [key: string]: number
+  }
+  pozisyonlar?: {
+    ST: number;
+    OOS: number;
+    RW: number;
+    LW: number;
+    CM: number;
+    DM: number;
+    DC: number;
+    DR: number;
+    DL: number;
+    GK: number;
   }
   guc?: number
 }
@@ -463,12 +663,43 @@ const pozisyonlar = [
 
 // Yeni oyuncu ekleme state'leri
 const yeniOyuncuDialog = ref(false)
-const yeniOyuncu = ref({
+
+interface Pozisyonlar {
+  ST: number;
+  OOS: number;
+  RW: number;
+  LW: number;
+  CM: number;
+  DM: number;
+  DC: number;
+  DR: number;
+  DL: number;
+  GK: number;
+}
+
+type PozisyonKodu = keyof Pozisyonlar;
+
+interface YeniOyuncu {
+  adSoyad: string;
+  resim: string | null;
+  pozisyonlar: Pozisyonlar;
+}
+
+const yeniOyuncu = ref<YeniOyuncu>({
   adSoyad: '',
-  pozisyon: '',
-  resim: '',
-  yetenekler: {},
-  guc: 0
+  resim: null,
+  pozisyonlar: {
+    ST: 1,
+    OOS: 1,
+    RW: 1,
+    LW: 1,
+    CM: 1,
+    DM: 1,
+    DC: 1,
+    DR: 1,
+    DL: 1,
+    GK: 1
+  }
 })
 
 // Düzenleme state'leri
@@ -476,8 +707,19 @@ const duzenleDialog = ref(false)
 const duzenleOyuncuData = ref<Oyuncu>({
   id: 0,
   adSoyad: '',
-  pozisyon: '',
   resim: '',
+  pozisyonlar: {
+    ST: 1,
+    OOS: 1,
+    RW: 1,
+    LW: 1,
+    CM: 1,
+    DM: 1,
+    DC: 1,
+    DR: 1,
+    DL: 1,
+    GK: 1
+  }
 })
 
 // Resim işleme state'leri
@@ -550,7 +792,10 @@ const hesaplaCanlıGuc = () => {
     yeteneklerObj[yetenek.ad] = Number(yetenek.deger)
   })
 
-  canliGuc.value = hesaplaOyuncuGucu(yeteneklerObj, secilenOyuncu.value.pozisyon)
+  canliGuc.value = hesaplaOyuncuGucu(yeteneklerObj, secilenOyuncu.value.pozisyonlar || {
+    ST: 1, OOS: 1, RW: 1, LW: 1, CM: 1,
+    DM: 1, DC: 1, DR: 1, DL: 1, GK: 1
+  })
 }
 
 // Yetenek değiştiğinde güç hesapla
@@ -585,32 +830,27 @@ const yetenekleriDuzenle = (oyuncu: Oyuncu) => {
 
 const kaydetOyuncu = async () => {
   try {
-    const yeteneklerObj: { [key: string]: number } = {}
-    
-    // Tüm yetenekleri 10 olarak ayarla
-    ;[...teknikYetenekler.value, ...mentalYetenekler.value, ...fizikselYetenekler.value].forEach(yetenek => {
-      yeteneklerObj[yetenek.ad] = 10
-    })
-    
-    const yeniOyuncuData = {
-      ...yeniOyuncu.value,
-      yetenekler: yeteneklerObj,
-      guc: hesaplaOyuncuGucu(yeteneklerObj, yeniOyuncu.value.pozisyon),
-    }
-    
-    await api.createOyuncu(yeniOyuncuData)
-    await oyunculariYukle() // Listeyi güncelle
-    
+    const response = await axios.post('http://localhost:3000/api/oyuncular', yeniOyuncu.value)
+    oyuncular.value.push(response.data)
     yeniOyuncuDialog.value = false
     yeniOyuncu.value = {
       adSoyad: '',
-      pozisyon: '',
-      resim: '',
-      yetenekler: {},
-      guc: 0
+      resim: null,
+      pozisyonlar: {
+        ST: 1,
+        OOS: 1,
+        RW: 1,
+        LW: 1,
+        CM: 1,
+        DM: 1,
+        DC: 1,
+        DR: 1,
+        DL: 1,
+        GK: 1
+      }
     }
   } catch (error) {
-    console.error('Oyuncu kaydedilirken hata oluştu:', error)
+    console.error('Oyuncu kaydedilirken hata:', error)
   }
 }
 
@@ -648,7 +888,11 @@ const yetenekleriKaydet = async () => {
         yeteneklerObj[yetenek.ad] = Number(yetenek.deger)
       })
       
-      const guc = hesaplaOyuncuGucu(yeteneklerObj, secilenOyuncu.value.pozisyon)
+      const guc = hesaplaOyuncuGucu(yeteneklerObj, secilenOyuncu.value.pozisyonlar || {
+        ST: 1, OOS: 1, RW: 1, LW: 1, CM: 1,
+        DM: 1, DC: 1, DR: 1, DL: 1, GK: 1
+      })
+
       const guncelOyuncu = {
         ...secilenOyuncu.value,
         yetenekler: yeteneklerObj,
@@ -674,9 +918,35 @@ const oyuncuGucRengi = (guc?: number) => {
 }
 
 // Güç hesaplama fonksiyonu
-const hesaplaOyuncuGucu = (yetenekler: { [key: string]: number }, pozisyon: string) => {
+const hesaplaOyuncuGucu = (yetenekler: { [key: string]: number }, pozisyonlar: Pozisyonlar) => {
   let toplamPuan = 0
   let toplamKatsayi = 0
+
+  // En yüksek seviyeli pozisyona göre katsayıları belirle
+  let enYuksekPozisyon = 'Orta Saha' // Varsayılan
+  let enYuksekSeviye = 0
+
+  // En yüksek seviyeli pozisyonu bul
+  Object.entries(pozisyonlar).forEach(([poz, seviye]) => {
+    if (seviye > enYuksekSeviye) {
+      enYuksekSeviye = seviye
+      switch(poz) {
+        case 'ST':
+          enYuksekPozisyon = 'Forvet'
+          break
+        case 'OOS':
+        case 'CM':
+        case 'DM':
+          enYuksekPozisyon = 'Orta Saha'
+          break
+        case 'DC':
+        case 'DL':
+        case 'DR':
+          enYuksekPozisyon = 'Defans'
+          break
+      }
+    }
+  })
 
   const katsayilar: { [key: string]: { [key: string]: number } } = {
     'Defans': {
@@ -741,10 +1011,10 @@ const hesaplaOyuncuGucu = (yetenekler: { [key: string]: number }, pozisyon: stri
     }
   }
 
-  const pozisyonKatsayilari = katsayilar[pozisyon] || {}
+  const pozisyonKatsayilari = katsayilar[enYuksekPozisyon] || {}
   
   Object.entries(yetenekler).forEach(([yetenek, deger]) => {
-    const katsayi = pozisyonKatsayilari[yetenek] || (pozisyon === 'Forvet' ? 2 : 1)
+    const katsayi = pozisyonKatsayilari[yetenek] || (enYuksekPozisyon === 'Forvet' ? 2 : 1)
     toplamPuan += deger * katsayi
     toplamKatsayi += katsayi
   })
@@ -849,6 +1119,53 @@ const yetenekDegerRengi = (deger: number) => {
   if (deger >= 10) return 'warning-value'
   return 'error-value'
 }
+
+const togglePosition = (pos: PozisyonKodu) => {
+  yeniOyuncu.value.pozisyonlar[pos] = (yeniOyuncu.value.pozisyonlar[pos] % 5) + 1
+}
+
+const getPosClass = (pos: PozisyonKodu): string => {
+  return `level-${yeniOyuncu.value.pozisyonlar[pos]}`
+}
+
+const toggleDuzenlePosition = (pos: PozisyonKodu) => {
+  if (!duzenleOyuncuData.value.pozisyonlar) {
+    duzenleOyuncuData.value.pozisyonlar = {
+      ST: 1, OOS: 1, RW: 1, LW: 1, CM: 1,
+      DM: 1, DC: 1, DR: 1, DL: 1, GK: 1
+    }
+  }
+  duzenleOyuncuData.value.pozisyonlar[pos] = (duzenleOyuncuData.value.pozisyonlar[pos] % 5) + 1
+}
+
+const getDuzenleClass = (pos: PozisyonKodu): string => {
+  if (!duzenleOyuncuData.value.pozisyonlar) return 'level-1'
+  return `level-${duzenleOyuncuData.value.pozisyonlar[pos]}`
+}
+
+const getPozisyonAciklama = (poz: string, seviye: number): string => {
+  const seviyeAdi = {
+    2: 'Kötü',
+    3: 'Ortalama',
+    4: 'İyi',
+    5: 'Çok İyi'
+  }[seviye] || ''
+
+  const pozisyonAdi = {
+    'ST': 'Forvet',
+    'OOS': 'Ofansif Orta Saha',
+    'RW': 'Sağ Kanat',
+    'LW': 'Sol Kanat',
+    'CM': 'Merkez Orta Saha',
+    'DM': 'Defansif Orta Saha',
+    'DC': 'Stoper',
+    'DR': 'Sağ Bek',
+    'DL': 'Sol Bek',
+    'GK': 'Kaleci'
+  }[poz] || poz
+
+  return `${pozisyonAdi} - ${seviyeAdi}`
+}
 </script>
 
 <style scoped>
@@ -865,6 +1182,8 @@ const yetenekDegerRengi = (deger: number) => {
   border-radius: 4px;
   margin-bottom: 8px;
   transition: background-color 0.2s;
+  background-color: white;
+  color: black;
 }
 
 .yetenek-container:hover {
@@ -874,7 +1193,7 @@ const yetenekDegerRengi = (deger: number) => {
 .yetenek-label {
   font-size: 1rem;
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.87);
+  color: black;
   flex: 1;
 }
 
@@ -970,6 +1289,101 @@ const yetenekDegerRengi = (deger: number) => {
   .yetenek-btn {
     width: 42px !important;
     height: 42px !important;
+  }
+}
+
+.football-field {
+  background-color: #2c3e50;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 10px 0;
+  background-image: linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px),
+                    linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.position-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.position-box {
+  width: 60px;
+  height: 40px;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+  text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+}
+
+.level-1 { background-color: white; color: #333; text-shadow: none; }
+.level-2 { background-color: #ffd700; color: #333; } /* Sarı - Kötü */
+.level-3 { background-color: #ff9800; color: white; } /* Turuncu - Ortalama */
+.level-4 { background-color: #2e7d32; color: white; } /* Koyu Yeşil - İyi */
+.level-5 { background-color: #66bb6a; color: white; } /* Açık Yeşil - Çok İyi */
+
+.position-legend {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+  padding: 10px;
+  background-color: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #333;
+}
+
+.legend-box {
+  width: 30px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid;
+}
+
+/* Pozisyon mini kutuları için stil */
+.positions-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 200px;
+  min-height: 28px;
+  align-items: center;
+}
+
+.position-mini-box {
+  font-size: 0.75rem;
+  padding: 4px 6px;
+  border-radius: 3px;
+  font-weight: bold;
+  min-width: 32px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Responsive düzenlemeler */
+@media (max-width: 600px) {
+  .positions-preview {
+    max-width: 150px;
+  }
+  
+  .position-mini-box {
+    font-size: 0.7rem;
+    padding: 1px 3px;
+    min-width: 28px;
   }
 }
 </style> 

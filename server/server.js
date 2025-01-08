@@ -12,12 +12,16 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Veritabanı şemasını oluştur
 const initDatabase = async () => {
   try {
+    // Önce mevcut tabloları sil (geçici çözüm)
+    await db.query('DROP TABLE IF EXISTS pozisyonlar');
+    await db.query('DROP TABLE IF EXISTS oyuncu_ozellikleri');
+    await db.query('DROP TABLE IF EXISTS oyuncular');
+    
     // Oyuncular tablosunu oluştur (eğer yoksa)
     await db.query(`
       CREATE TABLE IF NOT EXISTS oyuncular (
         id INT AUTO_INCREMENT PRIMARY KEY,
         adSoyad VARCHAR(100) NOT NULL,
-        pozisyon VARCHAR(50) NOT NULL,
         resim LONGTEXT,
         guc INT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -37,8 +41,21 @@ const initDatabase = async () => {
         FOREIGN KEY (oyuncu_id) REFERENCES oyuncular(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+
+    // Pozisyonlar tablosunu oluştur (eğer yoksa)
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS pozisyonlar (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        oyuncu_id INT NOT NULL,
+        pozisyon_kodu VARCHAR(10) NOT NULL,
+        seviye INT NOT NULL COMMENT '1: Çok Kötü, 2: Kötü, 3: Ortalama, 4: İyi, 5: Çok İyi',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT NULL,
+        FOREIGN KEY (oyuncu_id) REFERENCES oyuncular(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
     
-    console.log('Veritabanı şeması kontrol edildi');
+    console.log('Veritabanı şeması yeniden oluşturuldu');
   } catch (error) {
     console.error('Veritabanı şeması oluşturulurken hata:', error);
     process.exit(1);
@@ -53,10 +70,15 @@ app.get('/api/oyuncular', async (req, res) => {
   try {
     const [oyuncular] = await db.query('SELECT * FROM oyuncular');
     
-    // Her oyuncu için özellikleri getir
+    // Her oyuncu için özellikleri ve pozisyonları getir
     for (const oyuncu of oyuncular) {
       const [ozellikler] = await db.query(
         'SELECT ozellik_adi, deger FROM oyuncu_ozellikleri WHERE oyuncu_id = ?',
+        [oyuncu.id]
+      );
+      
+      const [pozisyonlar] = await db.query(
+        'SELECT pozisyon_kodu, seviye FROM pozisyonlar WHERE oyuncu_id = ?',
         [oyuncu.id]
       );
       
@@ -66,7 +88,14 @@ app.get('/api/oyuncular', async (req, res) => {
         yetenekler[ozellik.ozellik_adi] = ozellik.deger;
       });
       
+      // Pozisyonları obje formatına dönüştür
+      const pozisyonSeviyeleri = {};
+      pozisyonlar.forEach(poz => {
+        pozisyonSeviyeleri[poz.pozisyon_kodu] = poz.seviye;
+      });
+      
       oyuncu.yetenekler = yetenekler;
+      oyuncu.pozisyonlar = pozisyonSeviyeleri;
     }
     
     res.json(oyuncular);
@@ -79,12 +108,12 @@ app.get('/api/oyuncular', async (req, res) => {
 // Yeni oyuncu ekle
 app.post('/api/oyuncular', async (req, res) => {
   try {
-    const { adSoyad, pozisyon, resim, yetenekler, guc } = req.body;
+    const { adSoyad, resim, yetenekler, guc, pozisyonlar } = req.body;
     
     // Önce oyuncuyu ekle
     const [result] = await db.query(
-      'INSERT INTO oyuncular (adSoyad, pozisyon, resim, guc) VALUES (?, ?, ?, ?)',
-      [adSoyad, pozisyon, resim, guc]
+      'INSERT INTO oyuncular (adSoyad, resim, guc) VALUES (?, ?, ?)',
+      [adSoyad, resim, guc]
     );
     
     const oyuncuId = result.insertId;
@@ -98,6 +127,18 @@ app.post('/api/oyuncular', async (req, res) => {
         );
       }
     }
+
+    // Pozisyonları ekle
+    if (pozisyonlar) {
+      for (const [pozisyonKodu, seviye] of Object.entries(pozisyonlar)) {
+        if (seviye > 0) { // Sadece seçili pozisyonları kaydet
+          await db.query(
+            'INSERT INTO pozisyonlar (oyuncu_id, pozisyon_kodu, seviye) VALUES (?, ?, ?)',
+            [oyuncuId, pozisyonKodu, seviye]
+          );
+        }
+      }
+    }
     
     res.json({ id: oyuncuId, ...req.body });
   } catch (error) {
@@ -109,13 +150,13 @@ app.post('/api/oyuncular', async (req, res) => {
 // Oyuncu güncelle
 app.put('/api/oyuncular/:id', async (req, res) => {
   try {
-    const { adSoyad, pozisyon, resim, yetenekler, guc } = req.body;
+    const { adSoyad, resim, yetenekler, guc, pozisyonlar } = req.body;
     const oyuncuId = req.params.id;
     
     // Önce oyuncuyu güncelle
     await db.query(
-      'UPDATE oyuncular SET adSoyad = ?, pozisyon = ?, resim = ?, guc = ?, updated_at = NOW() WHERE id = ?',
-      [adSoyad, pozisyon, resim, guc, oyuncuId]
+      'UPDATE oyuncular SET adSoyad = ?, resim = ?, guc = ?, updated_at = NOW() WHERE id = ?',
+      [adSoyad, resim, guc, oyuncuId]
     );
     
     // Sonra özellikleri güncelle
@@ -129,6 +170,22 @@ app.put('/api/oyuncular/:id', async (req, res) => {
           'INSERT INTO oyuncu_ozellikleri (oyuncu_id, ozellik_adi, deger) VALUES (?, ?, ?)',
           [oyuncuId, ozellikAdi, deger]
         );
+      }
+    }
+
+    // Pozisyonları güncelle
+    if (pozisyonlar) {
+      // Önce mevcut pozisyonları sil
+      await db.query('DELETE FROM pozisyonlar WHERE oyuncu_id = ?', [oyuncuId]);
+      
+      // Yeni pozisyonları ekle
+      for (const [pozisyonKodu, seviye] of Object.entries(pozisyonlar)) {
+        if (seviye > 0) { // Sadece seçili pozisyonları kaydet
+          await db.query(
+            'INSERT INTO pozisyonlar (oyuncu_id, pozisyon_kodu, seviye) VALUES (?, ?, ?)',
+            [oyuncuId, pozisyonKodu, seviye]
+          );
+        }
       }
     }
     
