@@ -60,15 +60,18 @@
         <!-- Yeni Oyuncu Dialog -->
         <VDialog v-model="yeniOyuncuDialog" max-width="500px">
           <VCard>
-            <VCardTitle>Yeni Oyuncu Ekle</VCardTitle>
-            <VCardText>
+            <VCardTitle class="text-h5 pa-4 bg-primary text-white">
+              <VIcon icon="tabler-user-plus" class="me-2" />
+              Yeni Oyuncu Ekle
+            </VCardTitle>
+            <VCardText class="pa-4">
               <VForm @submit.prevent="kaydetOyuncu">
                 <!-- Resim Yükleme -->
-                <div class="mb-4">
-                  <div class="d-flex align-center mb-2">
+                <div class="mb-6">
+                  <div class="d-flex align-center justify-center mb-2">
                     <VAvatar
-                      size="100"
-                      class="me-4"
+                      size="120"
+                      class="me-4 elevation-2"
                     >
                       <VImg
                         v-if="yeniOyuncu.resim"
@@ -82,7 +85,9 @@
                       />
                     </VAvatar>
                     <VBtn
+                      prepend-icon="tabler-camera"
                       color="primary"
+                      variant="outlined"
                       @click="resimDialogAc('yeni')"
                     >
                       Fotoğraf Yükle
@@ -93,20 +98,41 @@
                 <VTextField
                   v-model="yeniOyuncu.adSoyad"
                   label="Adı Soyadı"
+                  variant="outlined"
+                  prepend-inner-icon="tabler-user"
+                  class="mb-4"
                   required
                 />
                 <VSelect
                   v-model="yeniOyuncu.pozisyon"
                   :items="pozisyonlar"
                   label="Pozisyon"
+                  variant="outlined"
+                  prepend-inner-icon="tabler-soccer-field"
+                  class="mb-4"
                   required
                 />
               </VForm>
             </VCardText>
-            <VCardActions>
+            <VDivider />
+            <VCardActions class="pa-4">
               <VSpacer />
-              <VBtn color="error" @click="yeniOyuncuDialog = false">İptal</VBtn>
-              <VBtn color="success" @click="kaydetOyuncu">Kaydet</VBtn>
+              <VBtn
+                color="error"
+                variant="outlined"
+                prepend-icon="tabler-x"
+                @click="yeniOyuncuDialog = false"
+              >
+                İptal
+              </VBtn>
+              <VBtn
+                color="success"
+                prepend-icon="tabler-device-floppy"
+                @click="kaydetOyuncu"
+                class="ms-2"
+              >
+                Kaydet
+              </VBtn>
             </VCardActions>
           </VCard>
         </VDialog>
@@ -114,15 +140,18 @@
         <!-- Düzenleme Dialog -->
         <VDialog v-model="duzenleDialog" max-width="500px">
           <VCard>
-            <VCardTitle>Oyuncu Düzenle</VCardTitle>
-            <VCardText>
+            <VCardTitle class="text-h5 pa-4 bg-primary text-white">
+              <VIcon icon="tabler-edit" class="me-2" />
+              Oyuncu Düzenle
+            </VCardTitle>
+            <VCardText class="pa-4">
               <VForm @submit.prevent="kaydetDuzenleme">
                 <!-- Resim Yükleme -->
-                <div class="mb-4">
-                  <div class="d-flex align-center mb-2">
+                <div class="mb-6">
+                  <div class="d-flex align-center justify-center mb-2">
                     <VAvatar
-                      size="100"
-                      class="me-4"
+                      size="120"
+                      class="me-4 elevation-2"
                     >
                       <VImg
                         v-if="duzenleOyuncuData.resim"
@@ -136,7 +165,9 @@
                       />
                     </VAvatar>
                     <VBtn
+                      prepend-icon="tabler-camera"
                       color="primary"
+                      variant="outlined"
                       @click="resimDialogAc('duzenle')"
                     >
                       Fotoğraf Yükle
@@ -147,20 +178,41 @@
                 <VTextField
                   v-model="duzenleOyuncuData.adSoyad"
                   label="Adı Soyadı"
+                  variant="outlined"
+                  prepend-inner-icon="tabler-user"
+                  class="mb-4"
                   required
                 />
                 <VSelect
                   v-model="duzenleOyuncuData.pozisyon"
                   :items="pozisyonlar"
                   label="Pozisyon"
+                  variant="outlined"
+                  prepend-inner-icon="tabler-soccer-field"
+                  class="mb-4"
                   required
                 />
               </VForm>
             </VCardText>
-            <VCardActions>
+            <VDivider />
+            <VCardActions class="pa-4">
               <VSpacer />
-              <VBtn color="error" @click="duzenleDialog = false">İptal</VBtn>
-              <VBtn color="primary" @click="kaydetDuzenleme">Güncelle</VBtn>
+              <VBtn
+                color="error"
+                variant="outlined"
+                prepend-icon="tabler-x"
+                @click="duzenleDialog = false"
+              >
+                İptal
+              </VBtn>
+              <VBtn
+                color="primary"
+                prepend-icon="tabler-device-floppy"
+                @click="kaydetDuzenleme"
+                class="ms-2"
+              >
+                Güncelle
+              </VBtn>
             </VCardActions>
           </VCard>
         </VDialog>
