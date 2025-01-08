@@ -720,6 +720,46 @@ const yetenekRengi = (deger: number) => {
   return 'error'
 }
 
+// Resim işleme fonksiyonları
+const resimDialogAc = (mod: 'yeni' | 'duzenle') => {
+  resimModu.value = mod
+  resimDialog.value = true
+}
+
+const resimDialogKapat = () => {
+  resimDialog.value = false
+  seciliResim.value = ''
+}
+
+const resimSecildi = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (input.files && input.files[0]) {
+    const reader = new FileReader()
+    reader.onload = e => {
+      seciliResim.value = e.target?.result as string
+    }
+    reader.readAsDataURL(input.files[0])
+  }
+}
+
+const resimDegisti = ({ coordinates, canvas }: any) => {
+  cropperRef.value = canvas
+}
+
+const resimKirp = () => {
+  if (cropperRef.value) {
+    const kirpilanResim = cropperRef.value.toDataURL()
+    
+    if (resimModu.value === 'yeni') {
+      yeniOyuncu.value.resim = kirpilanResim
+    } else {
+      duzenleOyuncuData.value.resim = kirpilanResim
+    }
+    
+    resimDialogKapat()
+  }
+}
+
 const getKategoriYetenekleri = (kategori: string) => {
   switch (kategori) {
     case 'teknik':
