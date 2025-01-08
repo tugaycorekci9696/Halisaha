@@ -83,148 +83,96 @@
             variant="outlined"
             class="mb-4"
           />
-          <div class="saha-preview">
-            <!-- Forvet -->
-            <div class="saha-row">
-              <div class="d-flex align-center justify-space-between w-100">
-                <span>Forvet (ST)</span>
-                <VSlider
-                  v-model="yeniFormasyon.pozisyonlar.ST"
-                  :min="0"
-                  :max="3"
-                  :step="1"
-                  :ticks="[0,1,2,3]"
-                  :thumb-size="20"
-                  class="w-25"
-                  density="compact"
-                />
-              </div>
+          
+          <!-- Oyuncu Sayısı Seçimi -->
+          <div class="mb-4">
+            <div class="text-subtitle-1 mb-2">Takım Oyuncu Sayısı (Kaleci Hariç)</div>
+            <VSlider
+              v-model="yeniFormasyon.oyuncuSayisi"
+              :min="5"
+              :max="11"
+              :step="1"
+              :ticks="[5,6,7,8,9,10,11]"
+              show-ticks="always"
+              thumb-label
+              class="mb-2"
+            />
+            <div class="text-caption text-grey">Not: Kaleci otomatik olarak eklenecektir</div>
+          </div>
+
+          <!-- Mevki Dağılımı -->
+          <div class="mb-4">
+            <div class="text-subtitle-1 mb-2">Mevki Dağılımı</div>
+            <div class="d-flex gap-4">
+              <VTextField
+                v-model="yeniFormasyon.defans"
+                type="number"
+                label="Defans"
+                variant="outlined"
+                density="compact"
+                min="0"
+                :max="yeniFormasyon.oyuncuSayisi"
+                @input="mevkiDagilimiKontrol"
+              />
+              <VTextField
+                v-model="yeniFormasyon.ortasaha"
+                type="number"
+                label="Orta Saha"
+                variant="outlined"
+                density="compact"
+                min="0"
+                :max="yeniFormasyon.oyuncuSayisi"
+                @input="mevkiDagilimiKontrol"
+              />
+              <VTextField
+                v-model="yeniFormasyon.forvet"
+                type="number"
+                label="Forvet"
+                variant="outlined"
+                density="compact"
+                min="0"
+                :max="yeniFormasyon.oyuncuSayisi"
+                @input="mevkiDagilimiKontrol"
+              />
             </div>
-            <!-- Kanat ve OOS -->
-            <div class="saha-row">
-              <div class="d-flex align-center justify-space-between w-100">
-                <span>Sol Kanat (LW)</span>
-                <VSlider
-                  v-model="yeniFormasyon.pozisyonlar.LW"
-                  :min="0"
-                  :max="2"
-                  :step="1"
-                  :ticks="[0,1,2]"
-                  :thumb-size="20"
-                  class="w-25"
-                  density="compact"
-                />
-              </div>
-              <div class="d-flex align-center justify-space-between w-100">
-                <span>Ofansif Orta Saha (OOS)</span>
-                <VSlider
-                  v-model="yeniFormasyon.pozisyonlar.OOS"
-                  :min="0"
-                  :max="3"
-                  :step="1"
-                  :ticks="[0,1,2,3]"
-                  :thumb-size="20"
-                  class="w-25"
-                  density="compact"
-                />
-              </div>
-              <div class="d-flex align-center justify-space-between w-100">
-                <span>Sağ Kanat (RW)</span>
-                <VSlider
-                  v-model="yeniFormasyon.pozisyonlar.RW"
-                  :min="0"
-                  :max="2"
-                  :step="1"
-                  :ticks="[0,1,2]"
-                  :thumb-size="20"
-                  class="w-25"
-                  density="compact"
-                />
-              </div>
-            </div>
-            <!-- Orta Saha -->
-            <div class="saha-row">
-              <div class="d-flex align-center justify-space-between w-100">
-                <span>Orta Saha (CM)</span>
-                <VSlider
-                  v-model="yeniFormasyon.pozisyonlar.CM"
-                  :min="0"
-                  :max="3"
-                  :step="1"
-                  :ticks="[0,1,2,3]"
-                  :thumb-size="20"
-                  class="w-25"
-                  density="compact"
-                />
-              </div>
-            </div>
-            <!-- Defansif Orta Saha -->
-            <div class="saha-row">
-              <div class="d-flex align-center justify-space-between w-100">
-                <span>Defansif Orta Saha (DM)</span>
-                <VSlider
-                  v-model="yeniFormasyon.pozisyonlar.DM"
-                  :min="0"
-                  :max="2"
-                  :step="1"
-                  :ticks="[0,1,2]"
-                  :thumb-size="20"
-                  class="w-25"
-                  density="compact"
-                />
-              </div>
-            </div>
-            <!-- Defans -->
-            <div class="saha-row">
-              <div class="d-flex align-center justify-space-between w-100">
-                <span>Sol Bek (DL)</span>
-                <VSlider
-                  v-model="yeniFormasyon.pozisyonlar.DL"
-                  :min="0"
-                  :max="2"
-                  :step="1"
-                  :ticks="[0,1,2]"
-                  :thumb-size="20"
-                  class="w-25"
-                  density="compact"
-                />
-              </div>
-              <div class="d-flex align-center justify-space-between w-100">
-                <span>Stoper (DC)</span>
-                <VSlider
-                  v-model="yeniFormasyon.pozisyonlar.DC"
-                  :min="0"
-                  :max="2"
-                  :step="1"
-                  :ticks="[0,1,2]"
-                  :thumb-size="20"
-                  class="w-25"
-                  density="compact"
-                />
-              </div>
-              <div class="d-flex align-center justify-space-between w-100">
-                <span>Sağ Bek (DR)</span>
-                <VSlider
-                  v-model="yeniFormasyon.pozisyonlar.DR"
-                  :min="0"
-                  :max="2"
-                  :step="1"
-                  :ticks="[0,1,2]"
-                  :thumb-size="20"
-                  class="w-25"
-                  density="compact"
-                />
-              </div>
+            <div class="text-caption" :class="mevkiDagilimiGecerli ? 'text-success' : 'text-error'">
+              Toplam: {{ Number(yeniFormasyon.defans) + Number(yeniFormasyon.ortasaha) + Number(yeniFormasyon.forvet) }}/{{ yeniFormasyon.oyuncuSayisi }}
             </div>
           </div>
         </VCardText>
         <VCardActions>
           <VSpacer />
           <VBtn color="error" @click="formasyonDialog = false">İptal</VBtn>
-          <VBtn color="primary" @click="formasyonKaydet">Kaydet</VBtn>
+          <VBtn 
+            color="primary" 
+            @click="formasyonKaydet"
+            :disabled="!mevkiDagilimiGecerli || !yeniFormasyon.isim"
+          >
+            Kaydet
+          </VBtn>
         </VCardActions>
       </VCard>
     </VDialog>
+
+    <!-- Toast Bildirimleri -->
+    <VSnackbar
+      v-model="toast.show"
+      :color="toast.color"
+      :timeout="3000"
+      location="top"
+    >
+      {{ toast.message }}
+      
+      <template v-slot:actions>
+        <VBtn
+          color="white"
+          variant="text"
+          @click="toast.show = false"
+        >
+          Kapat
+        </VBtn>
+      </template>
+    </VSnackbar>
   </div>
 </template>
 
@@ -237,9 +185,7 @@ interface Oyuncu {
   adSoyad: string
   resim?: string
   guc?: number
-  pozisyonlar?: {
-    [key: string]: number
-  }
+  pozisyonlar?: Pozisyonlar
 }
 
 interface Takim {
@@ -252,12 +198,23 @@ interface Takim {
   }
 }
 
+interface Pozisyonlar {
+  GK: number
+  ST?: number
+  LW?: number
+  OOS?: number
+  RW?: number
+  CM?: number
+  DM?: number
+  DL?: number
+  DC?: number
+  DR?: number
+}
+
 interface Formasyon {
   id: number
   isim: string
-  pozisyonlar: {
-    [key: string]: number
-  }
+  pozisyonlar: Pozisyonlar
 }
 
 interface Pozisyon {
@@ -292,18 +249,13 @@ const formasyonlar = ref<Formasyon[]>([])
 const formasyonDialog = ref(false)
 const yeniFormasyon = ref({
   isim: '',
+  oyuncuSayisi: 5,
+  defans: 0,
+  ortasaha: 0,
+  forvet: 0,
   pozisyonlar: {
-    GK: 1, // Kaleci her zaman 1
-    ST: 0,
-    LW: 0,
-    OOS: 0,
-    RW: 0,
-    CM: 0,
-    DM: 0,
-    DL: 0,
-    DC: 0,
-    DR: 0
-  }
+    GK: 1 // Kaleci her zaman 1
+  } as Pozisyonlar
 })
 
 const pozisyonlar = ref<Pozisyon[]>([])
@@ -440,46 +392,109 @@ const takimlariSifirla = () => {
       GK: {}
     }
   }
+
+  showToast('Takımlar sıfırlandı', 'success')
 }
 
 const formasyonDialogAc = () => {
   yeniFormasyon.value = {
     isim: '',
+    oyuncuSayisi: 5,
+    defans: 0,
+    ortasaha: 0,
+    forvet: 0,
     pozisyonlar: {
-      GK: 1, // Kaleci her zaman 1
-      ST: 0,
-      LW: 0,
-      OOS: 0,
-      RW: 0,
-      CM: 0,
-      DM: 0,
-      DL: 0,
-      DC: 0,
-      DR: 0
-    }
+      GK: 1
+    } as Pozisyonlar
   }
   formasyonDialog.value = true
+}
+
+const mevkiDagilimiGecerli = computed(() => {
+  const toplam = Number(yeniFormasyon.value.defans) + 
+                Number(yeniFormasyon.value.ortasaha) + 
+                Number(yeniFormasyon.value.forvet)
+  return toplam === yeniFormasyon.value.oyuncuSayisi
+})
+
+const mevkiDagilimiKontrol = () => {
+  // Sayısal değerlere dönüştür
+  yeniFormasyon.value.defans = Number(yeniFormasyon.value.defans)
+  yeniFormasyon.value.ortasaha = Number(yeniFormasyon.value.ortasaha)
+  yeniFormasyon.value.forvet = Number(yeniFormasyon.value.forvet)
+
+  // Negatif değerleri sıfırla
+  if (yeniFormasyon.value.defans < 0) yeniFormasyon.value.defans = 0
+  if (yeniFormasyon.value.ortasaha < 0) yeniFormasyon.value.ortasaha = 0
+  if (yeniFormasyon.value.forvet < 0) yeniFormasyon.value.forvet = 0
+
+  // Maksimum değeri kontrol et
+  if (yeniFormasyon.value.defans > yeniFormasyon.value.oyuncuSayisi) {
+    yeniFormasyon.value.defans = yeniFormasyon.value.oyuncuSayisi
+    showToast('Defans oyuncu sayısı toplam oyuncu sayısını geçemez', 'warning')
+  }
+  if (yeniFormasyon.value.ortasaha > yeniFormasyon.value.oyuncuSayisi) {
+    yeniFormasyon.value.ortasaha = yeniFormasyon.value.oyuncuSayisi
+    showToast('Orta saha oyuncu sayısı toplam oyuncu sayısını geçemez', 'warning')
+  }
+  if (yeniFormasyon.value.forvet > yeniFormasyon.value.oyuncuSayisi) {
+    yeniFormasyon.value.forvet = yeniFormasyon.value.oyuncuSayisi
+    showToast('Forvet oyuncu sayısı toplam oyuncu sayısını geçemez', 'warning')
+  }
+
+  // Toplam oyuncu sayısını kontrol et
+  const toplam = yeniFormasyon.value.defans + yeniFormasyon.value.ortasaha + yeniFormasyon.value.forvet
+  if (toplam > yeniFormasyon.value.oyuncuSayisi) {
+    showToast(`Toplam oyuncu sayısı ${yeniFormasyon.value.oyuncuSayisi}'i geçemez`, 'error')
+  }
 }
 
 const formasyonKaydet = async () => {
   try {
     if (!yeniFormasyon.value.isim) {
-      alert('Lütfen formasyon ismi giriniz')
+      showToast('Lütfen formasyon ismi giriniz', 'error')
       return
     }
 
-    const toplamOyuncu = Object.values(yeniFormasyon.value.pozisyonlar).reduce((a, b) => a + b, 0)
-    if (toplamOyuncu !== 7) {
-      alert('Toplam 7 oyuncu olmalıdır (6 saha oyuncusu + 1 kaleci)')
+    if (!mevkiDagilimiGecerli.value) {
+      showToast(`Mevki dağılımı ${yeniFormasyon.value.oyuncuSayisi} oyuncuya eşit olmalıdır`, 'error')
       return
     }
 
-    await api.createFormasyon(yeniFormasyon.value)
+    // Pozisyonları oluştur
+    const pozisyonlar: Pozisyonlar = {
+      GK: 1 // Kaleci sabit
+    }
+
+    // Defans pozisyonları
+    if (yeniFormasyon.value.defans > 0) {
+      pozisyonlar.DL = Math.min(2, yeniFormasyon.value.defans)
+      pozisyonlar.DC = Math.max(0, yeniFormasyon.value.defans - 2)
+      pozisyonlar.DR = Math.min(2, yeniFormasyon.value.defans)
+    }
+
+    // Orta saha pozisyonları
+    if (yeniFormasyon.value.ortasaha > 0) {
+      pozisyonlar.CM = Math.ceil(yeniFormasyon.value.ortasaha / 2)
+      pozisyonlar.DM = Math.floor(yeniFormasyon.value.ortasaha / 2)
+    }
+
+    // Forvet pozisyonları
+    if (yeniFormasyon.value.forvet > 0) {
+      pozisyonlar.ST = yeniFormasyon.value.forvet
+    }
+
+    await api.createFormasyon({
+      isim: yeniFormasyon.value.isim,
+      pozisyonlar
+    })
+
+    showToast('Formasyon başarıyla kaydedildi', 'success')
     formasyonDialog.value = false
     formasyonlariYukle()
   } catch (error) {
     console.error('Formasyon kaydedilirken hata:', error)
-    alert('Formasyon kaydedilirken bir hata oluştu')
+    showToast('Formasyon kaydedilirken bir hata oluştu', 'error')
   }
 }
 
@@ -570,6 +585,22 @@ const siraliPozisyonlar = (pozisyonlar: { [key: string]: number }): { [key: stri
   }
   
   return siraliPozisyonlar
+}
+
+// Toast bildirimi için state
+const toast = ref({
+  show: false,
+  message: '',
+  color: 'success'
+})
+
+// Toast gösterme fonksiyonu
+const showToast = (message: string, color: 'success' | 'error' | 'warning' = 'success') => {
+  toast.value = {
+    show: true,
+    message,
+    color
+  }
 }
 
 onMounted(() => {
