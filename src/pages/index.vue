@@ -45,7 +45,7 @@
                     <div class="text-subtitle-2">{{ oyuncu.adSoyad }}</div>
                     <div class="pozisyon-dots d-flex gap-1 mt-1">
                       <template v-for="(seviye, poz) in siraliPozisyonlar(oyuncu.pozisyonlar || {})" :key="poz">
-                        <div v-if="seviye >= 2"
+                        <div v-if="seviye >= 3"
                              class="pozisyon-dot"
                              :class="[poz, `seviye-${seviye}`]"
                              :title="getPozisyonAciklama(String(poz), seviye)">
