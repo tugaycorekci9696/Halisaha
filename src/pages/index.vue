@@ -67,7 +67,129 @@
       <!-- Sahalar -->
       <VCol cols="12" md="8">
         <VRow>
-          <!-- Buraya yeni sahalar eklenecek -->
+          <VCol cols="12" md="6">
+            <VCard height="300" class="grid-card">
+              <div class="position-area forvet-area" 
+                   @dragover.prevent
+                   @drop="dropOnArea($event, 'A', 'ST')">
+                <div class="position-grid">
+                  <div v-for="i in 4" :key="i" class="position-slot">
+                    <div v-if="takimA.oyuncular.ST[i-1]" 
+                         class="player-card"
+                         draggable="true"
+                         @dragstart="dragStartPozisyon($event, 'A', 'ST', i-1)">
+                      {{ takimA.oyuncular.ST[i-1].adSoyad }}
+                    </div>
+                    <div v-else class="empty-slot">+</div>
+                  </div>
+                </div>
+              </div>
+              <div class="position-area ortasaha-area"
+                   @dragover.prevent
+                   @drop="dropOnArea($event, 'A', 'CM')">
+                <div class="position-grid">
+                  <div v-for="i in 4" :key="i" class="position-slot">
+                    <div v-if="takimA.oyuncular.CM[i-1]" 
+                         class="player-card"
+                         draggable="true"
+                         @dragstart="dragStartPozisyon($event, 'A', 'CM', i-1)">
+                      {{ takimA.oyuncular.CM[i-1].adSoyad }}
+                    </div>
+                    <div v-else class="empty-slot">+</div>
+                  </div>
+                </div>
+              </div>
+              <div class="position-area defans-area"
+                   @dragover.prevent
+                   @drop="dropOnArea($event, 'A', 'DC')">
+                <div class="position-grid">
+                  <div v-for="i in 4" :key="i" class="position-slot">
+                    <div v-if="takimA.oyuncular.DC[i-1]" 
+                         class="player-card"
+                         draggable="true"
+                         @dragstart="dragStartPozisyon($event, 'A', 'DC', i-1)">
+                      {{ takimA.oyuncular.DC[i-1].adSoyad }}
+                    </div>
+                    <div v-else class="empty-slot">+</div>
+                  </div>
+                </div>
+              </div>
+              <div class="position-area kaleci-area"
+                   @dragover.prevent
+                   @drop="dropOnArea($event, 'A', 'GK')">
+                <!-- Kaleci -->
+                <div v-for="(oyuncu, index) in takimA.oyuncular.GK" 
+                     :key="index"
+                     class="player-card"
+                     draggable="true"
+                     @dragstart="dragStartPozisyon($event, 'A', 'GK', index)">
+                  {{ oyuncu.adSoyad }}
+                </div>
+              </div>
+            </VCard>
+          </VCol>
+          <VCol cols="12" md="6">
+            <VCard height="300" class="grid-card">
+              <!-- B Takımı için aynı yapı -->
+              <div class="position-area forvet-area"
+                   @dragover.prevent
+                   @drop="dropOnArea($event, 'B', 'ST')">
+                <div class="position-grid">
+                  <div v-for="i in 4" :key="i" class="position-slot">
+                    <div v-if="takimB.oyuncular.ST[i-1]" 
+                         class="player-card"
+                         draggable="true"
+                         @dragstart="dragStartPozisyon($event, 'B', 'ST', i-1)">
+                      {{ takimB.oyuncular.ST[i-1].adSoyad }}
+                    </div>
+                    <div v-else class="empty-slot">+</div>
+                  </div>
+                </div>
+              </div>
+              <div class="position-area ortasaha-area"
+                   @dragover.prevent
+                   @drop="dropOnArea($event, 'B', 'CM')">
+                <div class="position-grid">
+                  <div v-for="i in 4" :key="i" class="position-slot">
+                    <div v-if="takimB.oyuncular.CM[i-1]" 
+                         class="player-card"
+                         draggable="true"
+                         @dragstart="dragStartPozisyon($event, 'B', 'CM', i-1)">
+                      {{ takimB.oyuncular.CM[i-1].adSoyad }}
+                    </div>
+                    <div v-else class="empty-slot">+</div>
+                  </div>
+                </div>
+              </div>
+              <div class="position-area defans-area"
+                   @dragover.prevent
+                   @drop="dropOnArea($event, 'B', 'DC')">
+                <div class="position-grid">
+                  <div v-for="i in 4" :key="i" class="position-slot">
+                    <div v-if="takimB.oyuncular.DC[i-1]" 
+                         class="player-card"
+                         draggable="true"
+                         @dragstart="dragStartPozisyon($event, 'B', 'DC', i-1)">
+                      {{ takimB.oyuncular.DC[i-1].adSoyad }}
+                    </div>
+                    <div v-else class="empty-slot">+</div>
+                  </div>
+                </div>
+              </div>
+              <div class="position-area kaleci-area"
+                   @dragover.prevent
+                   @drop="dropOnArea($event, 'B', 'GK')">
+                <!-- Kaleci -->
+                <div v-for="(oyuncu, index) in takimB.oyuncular.GK" 
+                     :key="index"
+                     class="player-card"
+                     draggable="true"
+                     @dragstart="dragStartPozisyon($event, 'B', 'GK', index)">
+                  {{ oyuncu.adSoyad }}
+                </div>
+              </div>
+            </VCard>
+          </VCol>
         </VRow>
       </VCol>
     </VRow>
@@ -603,6 +725,39 @@ const showToast = (message: string, color: 'success' | 'error' | 'warning' = 'su
   }
 }
 
+const dropOnArea = (event: DragEvent, takimKodu: 'A' | 'B', pozisyon: string) => {
+  event.preventDefault();
+  const oyuncuId = event.dataTransfer?.getData('oyuncuId');
+  const kaynakTakim = event.dataTransfer?.getData('kaynakTakim') as 'A' | 'B';
+  const kaynakPozisyon = event.dataTransfer?.getData('kaynakPozisyon');
+  const kaynakIndex = event.dataTransfer?.getData('kaynakIndex');
+
+  if (!oyuncuId) return;
+
+  let oyuncu: Oyuncu | null = null;
+
+  // Eğer havuzdan geliyorsa
+  if (!kaynakTakim) {
+    oyuncu = havuzdakiOyuncular.value.find(o => o.id === Number(oyuncuId)) || null;
+  } else {
+    // Eğer başka bir pozisyondan geliyorsa
+    const kaynakTakimObj = kaynakTakim === 'A' ? takimA : takimB;
+    oyuncu = kaynakTakimObj.value.oyuncular[kaynakPozisyon!][Number(kaynakIndex)];
+    
+    // Eski pozisyondan kaldır
+    if (oyuncu) {
+      delete kaynakTakimObj.value.oyuncular[kaynakPozisyon!][Number(kaynakIndex)];
+    }
+  }
+
+  if (!oyuncu) return;
+
+  // Yeni pozisyona ekle
+  const hedefTakim = takimKodu === 'A' ? takimA : takimB;
+  const yeniIndex = Object.keys(hedefTakim.value.oyuncular[pozisyon]).length;
+  hedefTakim.value.oyuncular[pozisyon][yeniIndex] = oyuncu;
+}
+
 onMounted(() => {
   oyunculariYukle()
   formasyonlariYukle()
@@ -762,5 +917,102 @@ onMounted(() => {
     padding: 1px 3px;
     min-width: 28px;
   }
+}
+
+.grid-card {
+  background-image: 
+    linear-gradient(to bottom,
+      #FF4500 20%, /* Turuncu - Forvet */
+      #FFD700 20%, 65%, /* Sarı - Orta Saha */
+      #0000FF 65%, 85%, /* Mavi - Defans */
+      #FF0000 85% /* Kırmızı - Kaleci */
+    );
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.position-area {
+  position: absolute;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+}
+
+.forvet-area {
+  height: 20%;
+  top: 0;
+}
+
+.ortasaha-area {
+  height: 45%;
+  top: 20%;
+}
+
+.defans-area {
+  height: 20%;
+  top: 65%;
+}
+
+.kaleci-area {
+  height: 15%;
+  top: 85%;
+}
+
+.player-card {
+  background: rgba(255, 255, 255, 0.9);
+  color: #000;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: move;
+  width: 100%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.player-card:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
+.position-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: 1fr;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  padding: 4px;
+}
+
+.position-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 40px;
+}
+
+.empty-slot {
+  width: 40px;
+  height: 40px;
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.empty-slot:hover {
+  border-color: rgba(255, 255, 255, 0.8);
+  color: white;
 }
 </style>
