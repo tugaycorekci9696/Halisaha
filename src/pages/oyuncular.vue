@@ -2,6 +2,14 @@
   <div>
     <VCard title="Oyuncular 👥">
       <VCardText>
+        <VBtn
+          color="success"
+          class="mb-4"
+          @click="yeniOyuncuDialog = true"
+        >
+          Yeni Oyuncu Ekle
+        </VBtn>
+
         <VTable class="oyuncular-table">
           <thead>
             <tr>
@@ -92,14 +100,6 @@
             </tr>
           </tbody>
         </VTable>
-
-        <VBtn
-          color="success"
-          class="mt-4"
-          @click="yeniOyuncuDialog = true"
-        >
-          Yeni Oyuncu Ekle
-        </VBtn>
 
         <!-- Yeni Oyuncu Dialog -->
         <VDialog v-model="yeniOyuncuDialog" max-width="500px">
