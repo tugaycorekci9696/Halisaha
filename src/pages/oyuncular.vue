@@ -48,10 +48,10 @@
               <td>
                 <div class="positions-preview">
                   <template v-if="oyuncu.pozisyonlar">
-                    <template v-for="(seviye, poz) in oyuncu.pozisyonlar" :key="poz">
+                    <template v-for="(seviye, poz) in siraliPozisyonlar(oyuncu.pozisyonlar)" :key="poz">
                       <div v-if="Number(seviye) >= 3"
                            :class="['position-mini-box', `level-${seviye}`]"
-                           :title="getPozisyonAciklama(poz, seviye)">
+                           :title="getPozisyonAciklama(String(poz), Number(seviye))">
                         {{ poz }}
                       </div>
                     </template>
@@ -1165,6 +1165,30 @@ const getPozisyonAciklama = (poz: string, seviye: number): string => {
   }[poz] || poz
 
   return `${pozisyonAdi} - ${seviyeAdi}`
+}
+
+const siraliPozisyonlar = (pozisyonlar: { [key: string]: number }): { [key: string]: number } => {
+  // Pozisyonları seviyelerine göre grupla
+  const gruplar: { [key: number]: { [key: string]: number } } = {}
+  
+  Object.entries(pozisyonlar).forEach(([poz, seviye]) => {
+    if (!gruplar[seviye]) {
+      gruplar[seviye] = {}
+    }
+    gruplar[seviye][poz] = seviye
+  })
+  
+  // Sıralı pozisyonları birleştir (5'ten 2'ye doğru)
+  const siraliPozisyonlar: { [key: string]: number } = {}
+  for (let seviye = 5; seviye >= 2; seviye--) {
+    if (gruplar[seviye]) {
+      Object.entries(gruplar[seviye]).forEach(([poz, sev]) => {
+        siraliPozisyonlar[poz] = sev
+      })
+    }
+  }
+  
+  return siraliPozisyonlar
 }
 </script>
 

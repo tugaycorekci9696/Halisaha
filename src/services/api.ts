@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = '/api';
 
 export interface Oyuncu {
   id: number;
@@ -11,6 +11,29 @@ export interface Oyuncu {
     [key: string]: number;
   };
   guc?: number;
+}
+
+export interface Formasyon {
+  id: number;
+  isim: string;
+  pozisyonlar: {
+    GK: number; // Kaleci her zaman 1 olacak
+    ST?: number;
+    LW?: number;
+    RW?: number;
+    CM?: number;
+    DM?: number;
+    LB?: number;
+    CB?: number;
+    RB?: number;
+  };
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface Pozisyon {
+  kod: string
+  isim: string
 }
 
 const api = {
@@ -39,14 +62,27 @@ const api = {
 
   // Formasyon metodları
   getFormasyonlar: async () => {
-    const response = await axios.get('/api/formasyonlar');
+    const response = await axios.get(`${API_URL}/formasyonlar`);
     return response.data;
   },
 
   createFormasyon: async (formasyon: Omit<Formasyon, 'id'>) => {
-    const response = await axios.post('/api/formasyonlar', formasyon);
+    // Kaleci pozisyonunu otomatik olarak ekle
+    const formasyonWithGK = {
+      ...formasyon,
+      pozisyonlar: {
+        ...formasyon.pozisyonlar,
+        GK: 1 // Her formasyonda 1 kaleci
+      }
+    };
+    const response = await axios.post(`${API_URL}/formasyonlar`, formasyonWithGK);
     return response.data;
-  }
+  },
+
+  getPozisyonlar: async (): Promise<Pozisyon[]> => {
+    const response = await axios.get(`${API_URL}/pozisyonlar`)
+    return response.data
+  },
 };
 
 export default api; 

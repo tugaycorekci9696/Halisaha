@@ -5,7 +5,7 @@
       <VCol cols="12" md="4">
         <VCard>
           <VCardTitle class="d-flex align-center justify-space-between">
-            <span>Oyuncu Havuzu 🏃</span>
+            <VSpacer />
             <div class="d-flex gap-2">
               <VBtn
                 color="primary"
@@ -43,6 +43,16 @@
                   </VAvatar>
                   <div class="oyuncu-bilgi flex-grow-1">
                     <div class="text-subtitle-2">{{ oyuncu.adSoyad }}</div>
+                    <div class="pozisyon-dots d-flex gap-1 mt-1">
+                      <template v-for="(seviye, poz) in siraliPozisyonlar(oyuncu.pozisyonlar || {})" :key="poz">
+                        <div v-if="seviye >= 2"
+                             class="pozisyon-dot"
+                             :class="[poz, `seviye-${seviye}`]"
+                             :title="getPozisyonAciklama(String(poz), seviye)">
+                          {{ poz }}
+                        </div>
+                      </template>
+                    </div>
                   </div>
                   <VChip :color="oyuncuGucRengi(oyuncu.guc)" size="small">
                     {{ oyuncu.guc }}
@@ -54,644 +64,157 @@
         </VCard>
       </VCol>
 
-      <!-- Takımlar -->
+      <!-- Sahalar -->
       <VCol cols="12" md="8">
         <VRow>
-          <!-- Takım A -->
-          <VCol cols="12" lg="6">
-            <VCard>
-              <VCardTitle class="d-flex align-center justify-space-between">
-                <VTextField
-                  v-model="takimA.isim"
-                  variant="underlined"
-                  hide-details
-                  density="compact"
-                  class="takim-ismi"
-                />
-                <VSelect
-                  v-model="takimA.formasyon"
-                  :items="formasyonlar"
-                  item-title="isim"
-                  item-value="id"
-                  variant="underlined"
-                  hide-details
-                  density="compact"
-                  class="formasyon-select"
-                  label="Formasyon"
-                  @update:model-value="formasyonDegistir('A', $event)"
-                />
-              </VCardTitle>
-              <VCardText>
-                <div class="saha"
-                     @dragover.prevent
-                     @drop="dropOnSaha($event, 'A')">
-                  <!-- Forvet -->
-                  <div class="saha-row">
-                    <div v-for="i in 3" :key="'ST-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('A', 'ST', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'A', 'ST', i)">
-                      <template v-if="getPozisyonOyuncu('A', 'ST', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'A', 'ST', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('A', 'ST', i)?.resim" 
-                                 :src="getPozisyonOyuncu('A', 'ST', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('A', 'ST', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('A', 'ST', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('A', 'ST', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">ST</span>
-                    </div>
-                  </div>
-                  <!-- Kanat ve OOS -->
-                  <div class="saha-row">
-                    <div v-for="i in 2" :key="'LW-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('A', 'LW', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'A', 'LW', i)">
-                      <template v-if="getPozisyonOyuncu('A', 'LW', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'A', 'LW', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('A', 'LW', i)?.resim" 
-                                 :src="getPozisyonOyuncu('A', 'LW', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('A', 'LW', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('A', 'LW', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('A', 'LW', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">LW</span>
-                    </div>
-                    <div v-for="i in 3" :key="'OOS-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('A', 'OOS', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'A', 'OOS', i)">
-                      <template v-if="getPozisyonOyuncu('A', 'OOS', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'A', 'OOS', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('A', 'OOS', i)?.resim" 
-                                 :src="getPozisyonOyuncu('A', 'OOS', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('A', 'OOS', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('A', 'OOS', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('A', 'OOS', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">OOS</span>
-                    </div>
-                    <div v-for="i in 2" :key="'RW-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('A', 'RW', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'A', 'RW', i)">
-                      <template v-if="getPozisyonOyuncu('A', 'RW', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'A', 'RW', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('A', 'RW', i)?.resim" 
-                                 :src="getPozisyonOyuncu('A', 'RW', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('A', 'RW', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('A', 'RW', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('A', 'RW', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">RW</span>
-                    </div>
-                  </div>
-                  <!-- Orta Saha -->
-                  <div class="saha-row">
-                    <div v-for="i in 3" :key="'CM-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('A', 'CM', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'A', 'CM', i)">
-                      <template v-if="getPozisyonOyuncu('A', 'CM', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'A', 'CM', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('A', 'CM', i)?.resim" 
-                                 :src="getPozisyonOyuncu('A', 'CM', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('A', 'CM', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('A', 'CM', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('A', 'CM', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">CM</span>
-                    </div>
-                  </div>
-                  <!-- Defansif Orta Saha -->
-                  <div class="saha-row">
-                    <div v-for="i in 2" :key="'DM-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('A', 'DM', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'A', 'DM', i)">
-                      <template v-if="getPozisyonOyuncu('A', 'DM', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'A', 'DM', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('A', 'DM', i)?.resim" 
-                                 :src="getPozisyonOyuncu('A', 'DM', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('A', 'DM', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('A', 'DM', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('A', 'DM', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">DM</span>
-                    </div>
-                  </div>
-                  <!-- Defans -->
-                  <div class="saha-row">
-                    <div v-for="i in 2" :key="'DL-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('A', 'DL', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'A', 'DL', i)">
-                      <template v-if="getPozisyonOyuncu('A', 'DL', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'A', 'DL', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('A', 'DL', i)?.resim" 
-                                 :src="getPozisyonOyuncu('A', 'DL', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('A', 'DL', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('A', 'DL', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('A', 'DL', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">DL</span>
-                    </div>
-                    <div v-for="i in 2" :key="'DC-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('A', 'DC', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'A', 'DC', i)">
-                      <template v-if="getPozisyonOyuncu('A', 'DC', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'A', 'DC', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('A', 'DC', i)?.resim" 
-                                 :src="getPozisyonOyuncu('A', 'DC', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('A', 'DC', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('A', 'DC', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('A', 'DC', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">DC</span>
-                    </div>
-                    <div v-for="i in 2" :key="'DR-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('A', 'DR', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'A', 'DR', i)">
-                      <template v-if="getPozisyonOyuncu('A', 'DR', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'A', 'DR', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('A', 'DR', i)?.resim" 
-                                 :src="getPozisyonOyuncu('A', 'DR', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('A', 'DR', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('A', 'DR', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('A', 'DR', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">DR</span>
-                    </div>
-                  </div>
-                  <!-- Kaleci -->
-                  <div class="saha-row">
-                    <div v-for="i in 1" :key="'GK-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('A', 'GK', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'A', 'GK', i)">
-                      <template v-if="getPozisyonOyuncu('A', 'GK', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'A', 'GK', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('A', 'GK', i)?.resim" 
-                                 :src="getPozisyonOyuncu('A', 'GK', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('A', 'GK', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('A', 'GK', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('A', 'GK', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">GK</span>
-                    </div>
-                  </div>
-                </div>
-              </VCardText>
-            </VCard>
-          </VCol>
-
-          <!-- Takım B -->
-          <VCol cols="12" lg="6">
-            <VCard>
-              <VCardTitle class="d-flex align-center justify-space-between">
-                <VTextField
-                  v-model="takimB.isim"
-                  variant="underlined"
-                  hide-details
-                  density="compact"
-                  class="takim-ismi"
-                />
-                <VSelect
-                  v-model="takimB.formasyon"
-                  :items="formasyonlar"
-                  item-title="isim"
-                  item-value="id"
-                  variant="underlined"
-                  hide-details
-                  density="compact"
-                  class="formasyon-select"
-                  label="Formasyon"
-                  @update:model-value="formasyonDegistir('B', $event)"
-                />
-              </VCardTitle>
-      <VCardText>
-                <div class="saha"
-                     @dragover.prevent
-                     @drop="dropOnSaha($event, 'B')">
-                  <!-- Forvet -->
-                  <div class="saha-row">
-                    <div v-for="i in 3" :key="'ST-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('B', 'ST', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'B', 'ST', i)">
-                      <template v-if="getPozisyonOyuncu('B', 'ST', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'B', 'ST', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('B', 'ST', i)?.resim" 
-                                 :src="getPozisyonOyuncu('B', 'ST', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('B', 'ST', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('B', 'ST', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('B', 'ST', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">ST</span>
-                    </div>
-                  </div>
-                  <!-- Kanat ve OOS -->
-                  <div class="saha-row">
-                    <div v-for="i in 2" :key="'LW-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('B', 'LW', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'B', 'LW', i)">
-                      <template v-if="getPozisyonOyuncu('B', 'LW', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'B', 'LW', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('B', 'LW', i)?.resim" 
-                                 :src="getPozisyonOyuncu('B', 'LW', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('B', 'LW', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('B', 'LW', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('B', 'LW', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">LW</span>
-                    </div>
-                    <div v-for="i in 3" :key="'OOS-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('B', 'OOS', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'B', 'OOS', i)">
-                      <template v-if="getPozisyonOyuncu('B', 'OOS', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'B', 'OOS', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('B', 'OOS', i)?.resim" 
-                                 :src="getPozisyonOyuncu('B', 'OOS', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('B', 'OOS', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('B', 'OOS', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('B', 'OOS', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">OOS</span>
-                    </div>
-                    <div v-for="i in 2" :key="'RW-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('B', 'RW', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'B', 'RW', i)">
-                      <template v-if="getPozisyonOyuncu('B', 'RW', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'B', 'RW', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('B', 'RW', i)?.resim" 
-                                 :src="getPozisyonOyuncu('B', 'RW', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('B', 'RW', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('B', 'RW', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('B', 'RW', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">RW</span>
-                    </div>
-                  </div>
-                  <!-- Orta Saha -->
-                  <div class="saha-row">
-                    <div v-for="i in 3" :key="'CM-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('B', 'CM', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'B', 'CM', i)">
-                      <template v-if="getPozisyonOyuncu('B', 'CM', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'B', 'CM', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('B', 'CM', i)?.resim" 
-                                 :src="getPozisyonOyuncu('B', 'CM', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('B', 'CM', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('B', 'CM', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('B', 'CM', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">CM</span>
-                    </div>
-                  </div>
-                  <!-- Defansif Orta Saha -->
-                  <div class="saha-row">
-                    <div v-for="i in 2" :key="'DM-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('B', 'DM', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'B', 'DM', i)">
-                      <template v-if="getPozisyonOyuncu('B', 'DM', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'B', 'DM', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('B', 'DM', i)?.resim" 
-                                 :src="getPozisyonOyuncu('B', 'DM', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('B', 'DM', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('B', 'DM', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('B', 'DM', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">DM</span>
-                    </div>
-                  </div>
-                  <!-- Defans -->
-                  <div class="saha-row">
-                    <div v-for="i in 2" :key="'DL-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('B', 'DL', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'B', 'DL', i)">
-                      <template v-if="getPozisyonOyuncu('B', 'DL', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'B', 'DL', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('B', 'DL', i)?.resim" 
-                                 :src="getPozisyonOyuncu('B', 'DL', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('B', 'DL', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('B', 'DL', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('B', 'DL', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">DL</span>
-                    </div>
-                    <div v-for="i in 2" :key="'DC-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('B', 'DC', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'B', 'DC', i)">
-                      <template v-if="getPozisyonOyuncu('B', 'DC', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'B', 'DC', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('B', 'DC', i)?.resim" 
-                                 :src="getPozisyonOyuncu('B', 'DC', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('B', 'DC', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('B', 'DC', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('B', 'DC', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">DC</span>
-                    </div>
-                    <div v-for="i in 2" :key="'DR-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('B', 'DR', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'B', 'DR', i)">
-                      <template v-if="getPozisyonOyuncu('B', 'DR', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'B', 'DR', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('B', 'DR', i)?.resim" 
-                                 :src="getPozisyonOyuncu('B', 'DR', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('B', 'DR', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('B', 'DR', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('B', 'DR', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">DR</span>
-                    </div>
-                  </div>
-                  <!-- Kaleci -->
-                  <div class="saha-row">
-                    <div v-for="i in 1" :key="'GK-'+i"
-                         class="pozisyon-kutusu"
-                         :class="{ 'dolu': getPozisyonOyuncu('B', 'GK', i) }"
-                         @dragover.prevent
-                         @drop="dropOnPozisyon($event, 'B', 'GK', i)">
-                      <template v-if="getPozisyonOyuncu('B', 'GK', i)">
-                        <div class="oyuncu-mini"
-                             draggable="true"
-                             @dragstart="(e) => dragStartPozisyon(e, 'B', 'GK', i)">
-                          <VAvatar size="36">
-                            <VImg v-if="getPozisyonOyuncu('B', 'GK', i)?.resim" 
-                                 :src="getPozisyonOyuncu('B', 'GK', i)?.resim" />
-                            <VIcon v-else icon="tabler-user" />
-                          </VAvatar>
-                          <div class="oyuncu-mini-bilgi">
-                            <div class="text-caption">{{ getPozisyonOyuncu('B', 'GK', i)?.adSoyad }}</div>
-                            <VChip :color="oyuncuGucRengi(getPozisyonOyuncu('B', 'GK', i)?.guc)" 
-                                  size="x-small" class="mt-1">
-                              {{ getPozisyonOyuncu('B', 'GK', i)?.guc }}
-                            </VChip>
-                          </div>
-                        </div>
-                      </template>
-                      <span v-else class="pozisyon-text">GK</span>
-                    </div>
-                  </div>
-                </div>
-      </VCardText>
-    </VCard>
-          </VCol>
+          <!-- Buraya yeni sahalar eklenecek -->
         </VRow>
       </VCol>
     </VRow>
 
     <!-- Formasyon Ekleme Dialog -->
-    <VDialog v-model="formasyonDialog" max-width="500">
+    <VDialog v-model="formasyonDialog" max-width="600px">
       <VCard>
         <VCardTitle>Yeni Formasyon Ekle</VCardTitle>
         <VCardText>
           <VTextField
             v-model="yeniFormasyon.isim"
-            label="Formasyon Adı"
-            placeholder="Örn: 4-3-3"
+            label="Formasyon İsmi"
+            variant="outlined"
             class="mb-4"
           />
-          
-          <div class="pozisyon-secici">
-            <div v-for="poz in pozisyonlar" :key="poz.kod" class="d-flex align-center mb-2">
-              <VCheckbox
-                v-model="yeniFormasyon.pozisyonlar[poz.kod]"
-                :label="poz.isim"
-                hide-details
-                class="me-2"
-              />
-              <VTextField
-                v-if="yeniFormasyon.pozisyonlar[poz.kod]"
-                v-model="yeniFormasyon.adetler[poz.kod]"
-                type="number"
-                min="0"
-                max="5"
-                hide-details
-                density="compact"
-                style="width: 80px"
-              />
+          <div class="saha-preview">
+            <!-- Forvet -->
+            <div class="saha-row">
+              <div class="d-flex align-center justify-space-between w-100">
+                <span>Forvet (ST)</span>
+                <VSlider
+                  v-model="yeniFormasyon.pozisyonlar.ST"
+                  :min="0"
+                  :max="3"
+                  :step="1"
+                  :ticks="[0,1,2,3]"
+                  :thumb-size="20"
+                  class="w-25"
+                  density="compact"
+                />
+              </div>
+            </div>
+            <!-- Kanat ve OOS -->
+            <div class="saha-row">
+              <div class="d-flex align-center justify-space-between w-100">
+                <span>Sol Kanat (LW)</span>
+                <VSlider
+                  v-model="yeniFormasyon.pozisyonlar.LW"
+                  :min="0"
+                  :max="2"
+                  :step="1"
+                  :ticks="[0,1,2]"
+                  :thumb-size="20"
+                  class="w-25"
+                  density="compact"
+                />
+              </div>
+              <div class="d-flex align-center justify-space-between w-100">
+                <span>Ofansif Orta Saha (OOS)</span>
+                <VSlider
+                  v-model="yeniFormasyon.pozisyonlar.OOS"
+                  :min="0"
+                  :max="3"
+                  :step="1"
+                  :ticks="[0,1,2,3]"
+                  :thumb-size="20"
+                  class="w-25"
+                  density="compact"
+                />
+              </div>
+              <div class="d-flex align-center justify-space-between w-100">
+                <span>Sağ Kanat (RW)</span>
+                <VSlider
+                  v-model="yeniFormasyon.pozisyonlar.RW"
+                  :min="0"
+                  :max="2"
+                  :step="1"
+                  :ticks="[0,1,2]"
+                  :thumb-size="20"
+                  class="w-25"
+                  density="compact"
+                />
+              </div>
+            </div>
+            <!-- Orta Saha -->
+            <div class="saha-row">
+              <div class="d-flex align-center justify-space-between w-100">
+                <span>Orta Saha (CM)</span>
+                <VSlider
+                  v-model="yeniFormasyon.pozisyonlar.CM"
+                  :min="0"
+                  :max="3"
+                  :step="1"
+                  :ticks="[0,1,2,3]"
+                  :thumb-size="20"
+                  class="w-25"
+                  density="compact"
+                />
+              </div>
+            </div>
+            <!-- Defansif Orta Saha -->
+            <div class="saha-row">
+              <div class="d-flex align-center justify-space-between w-100">
+                <span>Defansif Orta Saha (DM)</span>
+                <VSlider
+                  v-model="yeniFormasyon.pozisyonlar.DM"
+                  :min="0"
+                  :max="2"
+                  :step="1"
+                  :ticks="[0,1,2]"
+                  :thumb-size="20"
+                  class="w-25"
+                  density="compact"
+                />
+              </div>
+            </div>
+            <!-- Defans -->
+            <div class="saha-row">
+              <div class="d-flex align-center justify-space-between w-100">
+                <span>Sol Bek (DL)</span>
+                <VSlider
+                  v-model="yeniFormasyon.pozisyonlar.DL"
+                  :min="0"
+                  :max="2"
+                  :step="1"
+                  :ticks="[0,1,2]"
+                  :thumb-size="20"
+                  class="w-25"
+                  density="compact"
+                />
+              </div>
+              <div class="d-flex align-center justify-space-between w-100">
+                <span>Stoper (DC)</span>
+                <VSlider
+                  v-model="yeniFormasyon.pozisyonlar.DC"
+                  :min="0"
+                  :max="2"
+                  :step="1"
+                  :ticks="[0,1,2]"
+                  :thumb-size="20"
+                  class="w-25"
+                  density="compact"
+                />
+              </div>
+              <div class="d-flex align-center justify-space-between w-100">
+                <span>Sağ Bek (DR)</span>
+                <VSlider
+                  v-model="yeniFormasyon.pozisyonlar.DR"
+                  :min="0"
+                  :max="2"
+                  :step="1"
+                  :ticks="[0,1,2]"
+                  :thumb-size="20"
+                  class="w-25"
+                  density="compact"
+                />
+              </div>
             </div>
           </div>
         </VCardText>
@@ -700,7 +223,7 @@
           <VBtn color="error" @click="formasyonDialog = false">İptal</VBtn>
           <VBtn color="primary" @click="formasyonKaydet">Kaydet</VBtn>
         </VCardActions>
-    </VCard>
+      </VCard>
     </VDialog>
   </div>
 </template>
@@ -737,6 +260,11 @@ interface Formasyon {
   }
 }
 
+interface Pozisyon {
+  kod: string
+  isim: string
+}
+
 const havuzdakiOyuncular = ref<Oyuncu[]>([])
 const takimA = ref<Takim>({
   isim: 'Takım A',
@@ -764,22 +292,21 @@ const formasyonlar = ref<Formasyon[]>([])
 const formasyonDialog = ref(false)
 const yeniFormasyon = ref({
   isim: '',
-  pozisyonlar: {} as { [key: string]: boolean },
-  adetler: {} as { [key: string]: number }
+  pozisyonlar: {
+    GK: 1, // Kaleci her zaman 1
+    ST: 0,
+    LW: 0,
+    OOS: 0,
+    RW: 0,
+    CM: 0,
+    DM: 0,
+    DL: 0,
+    DC: 0,
+    DR: 0
+  }
 })
 
-const pozisyonlar = [
-  { kod: 'GK', isim: 'Kaleci' },
-  { kod: 'DL', isim: 'Sol Defans' },
-  { kod: 'DC', isim: 'Stoper' },
-  { kod: 'DR', isim: 'Sağ Defans' },
-  { kod: 'DM', isim: 'Defansif Orta Saha' },
-  { kod: 'CM', isim: 'Orta Saha' },
-  { kod: 'OOS', isim: 'Ofansif Orta Saha' },
-  { kod: 'LW', isim: 'Sol Kanat' },
-  { kod: 'ST', isim: 'Forvet' },
-  { kod: 'RW', isim: 'Sağ Kanat' }
-]
+const pozisyonlar = ref<Pozisyon[]>([])
 
 const filtrelenmisOyuncular = computed(() => {
   return havuzdakiOyuncular.value.filter(oyuncu => !oyuncununTakimi(oyuncu.id))
@@ -845,7 +372,7 @@ const dropOnPozisyon = (event: DragEvent, takimKodu: 'A' | 'B', pozisyon: string
   if (!oyuncu) return
 
   // Yeni pozisyona yerleştir
-  const takim = takimKodu === 'A' ? takimA : takimB
+  const takim = kaynakTakim === 'A' ? takimA : takimB
   takim.value.oyuncular[pozisyon] = {
     ...takim.value.oyuncular[pozisyon],
     [index]: oyuncu
@@ -892,7 +419,6 @@ const oyuncuGucRengi = (guc?: number) => {
 }
 
 const takimlariSifirla = () => {
-  // Takım A'yı sıfırla
   takimA.value = {
     isim: 'Takım A',
     formasyon: undefined,
@@ -903,8 +429,7 @@ const takimlariSifirla = () => {
       GK: {}
     }
   }
-
-  // Takım B'yi sıfırla
+  
   takimB.value = {
     isim: 'Takım B',
     formasyon: undefined,
@@ -920,31 +445,41 @@ const takimlariSifirla = () => {
 const formasyonDialogAc = () => {
   yeniFormasyon.value = {
     isim: '',
-    pozisyonlar: {},
-    adetler: {}
+    pozisyonlar: {
+      GK: 1, // Kaleci her zaman 1
+      ST: 0,
+      LW: 0,
+      OOS: 0,
+      RW: 0,
+      CM: 0,
+      DM: 0,
+      DL: 0,
+      DC: 0,
+      DR: 0
+    }
   }
   formasyonDialog.value = true
 }
 
 const formasyonKaydet = async () => {
-  const pozisyonlarObj: { [key: string]: number } = {}
-  
-  for (const poz of pozisyonlar) {
-    if (yeniFormasyon.value.pozisyonlar[poz.kod]) {
-      pozisyonlarObj[poz.kod] = Number(yeniFormasyon.value.adetler[poz.kod]) || 0
-    }
-  }
-  
   try {
-    await api.createFormasyon({
-      isim: yeniFormasyon.value.isim,
-      pozisyonlar: pozisyonlarObj
-    })
-    
-    await formasyonlariYukle()
+    if (!yeniFormasyon.value.isim) {
+      alert('Lütfen formasyon ismi giriniz')
+      return
+    }
+
+    const toplamOyuncu = Object.values(yeniFormasyon.value.pozisyonlar).reduce((a, b) => a + b, 0)
+    if (toplamOyuncu !== 7) {
+      alert('Toplam 7 oyuncu olmalıdır (6 saha oyuncusu + 1 kaleci)')
+      return
+    }
+
+    await api.createFormasyon(yeniFormasyon.value)
     formasyonDialog.value = false
+    formasyonlariYukle()
   } catch (error) {
     console.error('Formasyon kaydedilirken hata:', error)
+    alert('Formasyon kaydedilirken bir hata oluştu')
   }
 }
 
@@ -986,9 +521,61 @@ const formasyonDegistir = (takimKodu: 'A' | 'B', formasyonId: number) => {
   }
 }
 
+const getPozisyonAciklama = (pozisyon: string, seviye: number) => {
+  const pozisyonlar: { [key: string]: string } = {
+    ST: 'Forvet',
+    LW: 'Sol Kanat',
+    OOS: 'Ofansif Orta Saha',
+    RW: 'Sağ Kanat',
+    CM: 'Orta Saha',
+    DM: 'Defansif Orta Saha',
+    DL: 'Sol Bek',
+    DC: 'Stoper',
+    DR: 'Sağ Bek',
+    GK: 'Kaleci'
+  }
+
+  const seviyeler = ['Çok Kötü', 'Kötü', 'Orta', 'İyi', 'Çok İyi']
+  return `${pozisyonlar[pozisyon]}: ${seviyeler[seviye - 1]}`
+}
+
+// Pozisyonları yükle
+const pozisyonlariYukle = async () => {
+  try {
+    pozisyonlar.value = await api.getPozisyonlar()
+  } catch (error) {
+    console.error('Pozisyonlar yüklenirken hata:', error)
+  }
+}
+
+const siraliPozisyonlar = (pozisyonlar: { [key: string]: number }): { [key: string]: number } => {
+  // Pozisyonları seviyelerine göre grupla
+  const gruplar: { [key: number]: { [key: string]: number } } = {}
+  
+  Object.entries(pozisyonlar).forEach(([poz, seviye]) => {
+    if (!gruplar[seviye]) {
+      gruplar[seviye] = {}
+    }
+    gruplar[seviye][poz] = seviye
+  })
+  
+  // Sıralı pozisyonları birleştir (5'ten 2'ye doğru)
+  const siraliPozisyonlar: { [key: string]: number } = {}
+  for (let seviye = 5; seviye >= 2; seviye--) {
+    if (gruplar[seviye]) {
+      Object.entries(gruplar[seviye]).forEach(([poz, sev]) => {
+        siraliPozisyonlar[poz] = sev
+      })
+    }
+  }
+  
+  return siraliPozisyonlar
+}
+
 onMounted(() => {
   oyunculariYukle()
   formasyonlariYukle()
+  pozisyonlariYukle()
 })
 </script>
 
@@ -1022,7 +609,7 @@ onMounted(() => {
 
 .oyuncu-mini-bilgi {
   text-align: center;
-  color: white;
+  color: rgba(0,0,0,0.87);
   margin-top: 4px;
   font-size: 0.75rem;
 }
@@ -1076,6 +663,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  position: relative;
 }
 
 .pozisyon-kutusu.dolu {
@@ -1088,13 +676,6 @@ onMounted(() => {
   font-weight: bold;
 }
 
-.oyuncu-mini-bilgi {
-  text-align: center;
-  color: rgba(0,0,0,0.87);
-  margin-top: 4px;
-  font-size: 0.75rem;
-}
-
 .formasyon-select {
   max-width: 150px;
 }
@@ -1102,5 +683,53 @@ onMounted(() => {
 .pozisyon-secici {
   max-height: 400px;
   overflow-y: auto;
+}
+
+.saha-preview {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  border: 1px solid #e0e0e0;
+}
+
+.saha-preview .saha-row {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background-color: rgba(0,0,0,0.02);
+  border-radius: 8px;
+}
+
+.pozisyon-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.pozisyon-dot {
+  font-size: 0.75rem;
+  padding: 4px 6px;
+  border-radius: 3px;
+  font-weight: bold;
+  min-width: 32px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.pozisyon-dot.seviye-2 { background-color: #ffd700; color: #333; } /* Sarı - Kötü */
+.pozisyon-dot.seviye-3 { background-color: #ff9800; color: white; } /* Turuncu - Ortalama */
+.pozisyon-dot.seviye-4 { background-color: #2e7d32; color: white; } /* Koyu Yeşil - İyi */
+.pozisyon-dot.seviye-5 { background-color: #66bb6a; color: white; } /* Açık Yeşil - Çok İyi */
+
+@media (max-width: 600px) {
+  .pozisyon-dot {
+    font-size: 0.7rem;
+    padding: 1px 3px;
+    min-width: 28px;
+  }
 }
 </style>

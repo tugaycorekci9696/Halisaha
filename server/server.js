@@ -248,6 +248,23 @@ app.get('/api/formasyonlar', async (req, res) => {
   }
 })
 
+// Pozisyonları getir
+app.get('/api/pozisyonlar', (req, res) => {
+  const pozisyonlar = [
+    { kod: 'GK', isim: 'Kaleci' },
+    { kod: 'DL', isim: 'Sol Defans' },
+    { kod: 'DC', isim: 'Stoper' },
+    { kod: 'DR', isim: 'Sağ Defans' },
+    { kod: 'DM', isim: 'Defansif Orta Saha' },
+    { kod: 'CM', isim: 'Orta Saha' },
+    { kod: 'OOS', isim: 'Ofansif Orta Saha' },
+    { kod: 'LW', isim: 'Sol Kanat' },
+    { kod: 'ST', isim: 'Forvet' },
+    { kod: 'RW', isim: 'Sağ Kanat' }
+  ]
+  res.json(pozisyonlar)
+})
+
 app.listen(port, () => {
   console.log(`Server http://localhost:${port} adresinde çalışıyor`);
 }); 
