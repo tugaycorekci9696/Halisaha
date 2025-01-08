@@ -12,11 +12,6 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Veritabanı şemasını oluştur
 const initDatabase = async () => {
   try {
-    // Önce mevcut tabloları sil (geçici çözüm)
-    await db.query('DROP TABLE IF EXISTS pozisyonlar');
-    await db.query('DROP TABLE IF EXISTS oyuncu_ozellikleri');
-    await db.query('DROP TABLE IF EXISTS oyuncular');
-    
     // Oyuncular tablosunu oluştur (eğer yoksa)
     await db.query(`
       CREATE TABLE IF NOT EXISTS oyuncular (
@@ -54,10 +49,21 @@ const initDatabase = async () => {
         FOREIGN KEY (oyuncu_id) REFERENCES oyuncular(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+
+    // Formasyonlar tablosunu oluştur (eğer yoksa)
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS formasyonlar (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        isim VARCHAR(50) NOT NULL,
+        pozisyonlar TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
     
-    console.log('Veritabanı şeması yeniden oluşturuldu');
+    console.log('Veritabanı şeması kontrol edildi');
   } catch (error) {
-    console.error('Veritabanı şeması oluşturulurken hata:', error);
+    console.error('Veritabanı şeması kontrol edilirken hata:', error);
     process.exit(1);
   }
 };
@@ -206,6 +212,41 @@ app.delete('/api/oyuncular/:id', async (req, res) => {
     res.status(500).json({ error: 'Sunucu hatası' });
   }
 });
+
+// Formasyon ekle
+app.post('/api/formasyonlar', async (req, res) => {
+  try {
+    const { isim, pozisyonlar } = req.body
+    
+    const [result] = await db.query(
+      'INSERT INTO formasyonlar (isim, pozisyonlar) VALUES (?, ?)',
+      [isim, JSON.stringify(pozisyonlar)]
+    )
+    
+    res.json({ id: result.insertId, isim, pozisyonlar })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Sunucu hatası' })
+  }
+})
+
+// Formasyonları getir
+app.get('/api/formasyonlar', async (req, res) => {
+  try {
+    const [formasyonlar] = await db.query('SELECT * FROM formasyonlar')
+    
+    // pozisyonlar JSON string'ini parse et
+    const formasyonlarParsed = formasyonlar.map(f => ({
+      ...f,
+      pozisyonlar: JSON.parse(f.pozisyonlar)
+    }))
+    
+    res.json(formasyonlarParsed)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Sunucu hatası' })
+  }
+})
 
 app.listen(port, () => {
   console.log(`Server http://localhost:${port} adresinde çalışıyor`);

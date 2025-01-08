@@ -35,6 +35,17 @@ const api = {
   // Oyuncu sil
   deleteOyuncu: async (id: number): Promise<void> => {
     await axios.delete(`${API_URL}/oyuncular/${id}`);
+  },
+
+  // Formasyon metodları
+  getFormasyonlar: async () => {
+    const response = await axios.get('/api/formasyonlar');
+    return response.data;
+  },
+
+  createFormasyon: async (formasyon: Omit<Formasyon, 'id'>) => {
+    const response = await axios.post('/api/formasyonlar', formasyon);
+    return response.data;
   }
 };
 
