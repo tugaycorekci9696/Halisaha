@@ -1,88 +1,78 @@
 import axios from 'axios';
 
-const API_URL = '/api';
+const API_URL = 'http://localhost:3000/api';
+
+export interface Grup {
+  id: number;
+  isim: string;
+  oyuncuSayisi: number;
+  duzenleniyor?: boolean;
+  yeniIsim?: string;
+}
 
 export interface Oyuncu {
   id: number;
   adSoyad: string;
-  pozisyon: string;
   resim?: string;
-  yetenekler?: {
+  guc?: number;
+  pozisyonlar?: {
     [key: string]: number;
   };
-  guc?: number;
+  gruplar?: Grup[];
 }
 
-export interface Formasyon {
-  id: number;
-  isim: string;
-  pozisyonlar: {
-    GK: number; // Kaleci her zaman 1 olacak
-    ST?: number;
-    LW?: number;
-    RW?: number;
-    CM?: number;
-    DM?: number;
-    LB?: number;
-    CB?: number;
-    RB?: number;
-  };
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface Pozisyon {
-  kod: string
-  isim: string
-}
-
-const api = {
-  // Tüm oyuncuları getir
-  getOyuncular: async (): Promise<Oyuncu[]> => {
-    const response = await axios.get(`${API_URL}/oyuncular`);
-    return response.data;
-  },
-
-  // Yeni oyuncu ekle
-  createOyuncu: async (oyuncu: Omit<Oyuncu, 'id'>): Promise<Oyuncu> => {
-    const response = await axios.post(`${API_URL}/oyuncular`, oyuncu);
-    return response.data;
-  },
-
-  // Oyuncu güncelle
-  updateOyuncu: async (id: number, oyuncu: Partial<Oyuncu>): Promise<Oyuncu> => {
-    const response = await axios.put(`${API_URL}/oyuncular/${id}`, oyuncu);
-    return response.data;
-  },
-
-  // Oyuncu sil
-  deleteOyuncu: async (id: number): Promise<void> => {
-    await axios.delete(`${API_URL}/oyuncular/${id}`);
-  },
-
-  // Formasyon metodları
-  getFormasyonlar: async () => {
-    const response = await axios.get(`${API_URL}/formasyonlar`);
-    return response.data;
-  },
-
-  createFormasyon: async (formasyon: Omit<Formasyon, 'id'>) => {
-    // Kaleci pozisyonunu otomatik olarak ekle
-    const formasyonWithGK = {
-      ...formasyon,
-      pozisyonlar: {
-        ...formasyon.pozisyonlar,
-        GK: 1 // Her formasyonda 1 kaleci
-      }
-    };
-    const response = await axios.post(`${API_URL}/formasyonlar`, formasyonWithGK);
-    return response.data;
-  },
-
-  getPozisyonlar: async (): Promise<Pozisyon[]> => {
-    const response = await axios.get(`${API_URL}/pozisyonlar`)
-    return response.data
-  },
+// Oyuncular
+export const getOyuncular = async (): Promise<Oyuncu[]> => {
+  const response = await axios.get(`${API_URL}/oyuncular`);
+  return response.data;
 };
 
-export default api; 
+export const createOyuncu = async (oyuncu: Omit<Oyuncu, 'id'>): Promise<Oyuncu> => {
+  const response = await axios.post(`${API_URL}/oyuncular`, oyuncu);
+  return response.data;
+};
+
+export const updateOyuncu = async (id: number, oyuncu: Partial<Oyuncu>): Promise<Oyuncu> => {
+  const response = await axios.put(`${API_URL}/oyuncular/${id}`, oyuncu);
+  return response.data;
+};
+
+export const deleteOyuncu = async (id: number): Promise<void> => {
+  await axios.delete(`${API_URL}/oyuncular/${id}`);
+};
+
+// Gruplar
+export const getGruplar = async (): Promise<Grup[]> => {
+  const response = await axios.get(`${API_URL}/gruplar`);
+  return response.data;
+};
+
+export const createGrup = async (grup: Omit<Grup, 'id' | 'oyuncuSayisi'>): Promise<Grup> => {
+  const response = await axios.post(`${API_URL}/gruplar`, grup);
+  return response.data;
+};
+
+export const updateGrup = async (id: number, grup: Partial<Grup>): Promise<Grup> => {
+  const response = await axios.put(`${API_URL}/gruplar/${id}`, grup);
+  return response.data;
+};
+
+export const deleteGrup = async (id: number): Promise<void> => {
+  await axios.delete(`${API_URL}/gruplar/${id}`);
+};
+
+export const updateOyuncuGruplari = async (oyuncuId: number, grupIds: number[]): Promise<void> => {
+  await axios.put(`${API_URL}/oyuncular/${oyuncuId}/gruplar`, { grupIds });
+};
+
+export default {
+  getOyuncular,
+  createOyuncu,
+  updateOyuncu,
+  deleteOyuncu,
+  getGruplar,
+  createGrup,
+  updateGrup,
+  deleteGrup,
+  updateOyuncuGruplari
+}; 

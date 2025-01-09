@@ -8,14 +8,6 @@
             <VSpacer />
             <div class="d-flex gap-2">
               <VBtn
-                color="primary"
-                size="small"
-                prepend-icon="tabler-plus"
-                @click="formasyonDialogAc"
-              >
-                Formasyon Ekle
-              </VBtn>
-              <VBtn
                 color="error"
                 size="small"
                 prepend-icon="tabler-refresh"
@@ -248,88 +240,6 @@
       </VCol>
     </VRow>
 
-    <!-- Formasyon Ekleme Dialog -->
-    <VDialog v-model="formasyonDialog" max-width="600px">
-      <VCard>
-        <VCardTitle>Yeni Formasyon Ekle</VCardTitle>
-        <VCardText>
-          <VTextField
-            v-model="yeniFormasyon.isim"
-            label="Formasyon İsmi"
-            variant="outlined"
-            class="mb-4"
-          />
-          
-          <!-- Oyuncu Sayısı Seçimi -->
-          <div class="mb-4">
-            <div class="text-subtitle-1 mb-2">Takım Oyuncu Sayısı (Kaleci Hariç)</div>
-            <VSlider
-              v-model="yeniFormasyon.oyuncuSayisi"
-              :min="5"
-              :max="11"
-              :step="1"
-              :ticks="[5,6,7,8,9,10,11]"
-              show-ticks="always"
-              thumb-label
-              class="mb-2"
-            />
-            <div class="text-caption text-grey">Not: Kaleci otomatik olarak eklenecektir</div>
-          </div>
-
-          <!-- Mevki Dağılımı -->
-          <div class="mb-4">
-            <div class="text-subtitle-1 mb-2">Mevki Dağılımı</div>
-            <div class="d-flex gap-4">
-              <VTextField
-                v-model="yeniFormasyon.defans"
-                type="number"
-                label="Defans"
-                variant="outlined"
-                density="compact"
-                min="0"
-                :max="yeniFormasyon.oyuncuSayisi"
-                @input="mevkiDagilimiKontrol"
-              />
-              <VTextField
-                v-model="yeniFormasyon.ortasaha"
-                type="number"
-                label="Orta Saha"
-                variant="outlined"
-                density="compact"
-                min="0"
-                :max="yeniFormasyon.oyuncuSayisi"
-                @input="mevkiDagilimiKontrol"
-              />
-              <VTextField
-                v-model="yeniFormasyon.forvet"
-                type="number"
-                label="Forvet"
-                variant="outlined"
-                density="compact"
-                min="0"
-                :max="yeniFormasyon.oyuncuSayisi"
-                @input="mevkiDagilimiKontrol"
-              />
-            </div>
-            <div class="text-caption" :class="mevkiDagilimiGecerli ? 'text-success' : 'text-error'">
-              Toplam: {{ Number(yeniFormasyon.defans) + Number(yeniFormasyon.ortasaha) + Number(yeniFormasyon.forvet) }}/{{ yeniFormasyon.oyuncuSayisi }}
-            </div>
-          </div>
-        </VCardText>
-        <VCardActions>
-          <VSpacer />
-          <VBtn color="error" @click="formasyonDialog = false">İptal</VBtn>
-          <VBtn 
-            color="primary" 
-            @click="formasyonKaydet"
-            :disabled="!mevkiDagilimiGecerli || !yeniFormasyon.isim"
-          >
-            Kaydet
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
     <!-- Toast Bildirimleri -->
     <VSnackbar
       v-model="toast.show"
@@ -422,17 +332,6 @@ const takimB = ref<Takim>({
 })
 
 const formasyonlar = ref<Formasyon[]>([])
-const formasyonDialog = ref(false)
-const yeniFormasyon = ref({
-  isim: '',
-  oyuncuSayisi: 5,
-  defans: 0,
-  ortasaha: 0,
-  forvet: 0,
-  pozisyonlar: {
-    GK: 1 // Kaleci her zaman 1
-  } as Pozisyonlar
-})
 
 const pozisyonlar = ref<Pozisyon[]>([])
 
@@ -571,146 +470,6 @@ const takimlariSifirla = () => {
   showToast('Takımlar sıfırlandı', 'success')
 }
 
-const formasyonDialogAc = () => {
-  yeniFormasyon.value = {
-    isim: '',
-    oyuncuSayisi: 5,
-    defans: 0,
-    ortasaha: 0,
-    forvet: 0,
-    pozisyonlar: {
-      GK: 1
-    } as Pozisyonlar
-  }
-  formasyonDialog.value = true
-}
-
-const mevkiDagilimiGecerli = computed(() => {
-  const toplam = Number(yeniFormasyon.value.defans) + 
-                Number(yeniFormasyon.value.ortasaha) + 
-                Number(yeniFormasyon.value.forvet)
-  return toplam === yeniFormasyon.value.oyuncuSayisi
-})
-
-const mevkiDagilimiKontrol = () => {
-  // Sayısal değerlere dönüştür
-  yeniFormasyon.value.defans = Number(yeniFormasyon.value.defans)
-  yeniFormasyon.value.ortasaha = Number(yeniFormasyon.value.ortasaha)
-  yeniFormasyon.value.forvet = Number(yeniFormasyon.value.forvet)
-
-  // Negatif değerleri sıfırla
-  if (yeniFormasyon.value.defans < 0) yeniFormasyon.value.defans = 0
-  if (yeniFormasyon.value.ortasaha < 0) yeniFormasyon.value.ortasaha = 0
-  if (yeniFormasyon.value.forvet < 0) yeniFormasyon.value.forvet = 0
-
-  // Maksimum değeri kontrol et
-  if (yeniFormasyon.value.defans > yeniFormasyon.value.oyuncuSayisi) {
-    yeniFormasyon.value.defans = yeniFormasyon.value.oyuncuSayisi
-    showToast('Defans oyuncu sayısı toplam oyuncu sayısını geçemez', 'warning')
-  }
-  if (yeniFormasyon.value.ortasaha > yeniFormasyon.value.oyuncuSayisi) {
-    yeniFormasyon.value.ortasaha = yeniFormasyon.value.oyuncuSayisi
-    showToast('Orta saha oyuncu sayısı toplam oyuncu sayısını geçemez', 'warning')
-  }
-  if (yeniFormasyon.value.forvet > yeniFormasyon.value.oyuncuSayisi) {
-    yeniFormasyon.value.forvet = yeniFormasyon.value.oyuncuSayisi
-    showToast('Forvet oyuncu sayısı toplam oyuncu sayısını geçemez', 'warning')
-  }
-
-  // Toplam oyuncu sayısını kontrol et
-  const toplam = yeniFormasyon.value.defans + yeniFormasyon.value.ortasaha + yeniFormasyon.value.forvet
-  if (toplam > yeniFormasyon.value.oyuncuSayisi) {
-    showToast(`Toplam oyuncu sayısı ${yeniFormasyon.value.oyuncuSayisi}'i geçemez`, 'error')
-  }
-}
-
-const formasyonKaydet = async () => {
-  try {
-    if (!yeniFormasyon.value.isim) {
-      showToast('Lütfen formasyon ismi giriniz', 'error')
-      return
-    }
-
-    if (!mevkiDagilimiGecerli.value) {
-      showToast(`Mevki dağılımı ${yeniFormasyon.value.oyuncuSayisi} oyuncuya eşit olmalıdır`, 'error')
-      return
-    }
-
-    // Pozisyonları oluştur
-    const pozisyonlar: Pozisyonlar = {
-      GK: 1 // Kaleci sabit
-    }
-
-    // Defans pozisyonları
-    if (yeniFormasyon.value.defans > 0) {
-      pozisyonlar.DL = Math.min(2, yeniFormasyon.value.defans)
-      pozisyonlar.DC = Math.max(0, yeniFormasyon.value.defans - 2)
-      pozisyonlar.DR = Math.min(2, yeniFormasyon.value.defans)
-    }
-
-    // Orta saha pozisyonları
-    if (yeniFormasyon.value.ortasaha > 0) {
-      pozisyonlar.CM = Math.ceil(yeniFormasyon.value.ortasaha / 2)
-      pozisyonlar.DM = Math.floor(yeniFormasyon.value.ortasaha / 2)
-    }
-
-    // Forvet pozisyonları
-    if (yeniFormasyon.value.forvet > 0) {
-      pozisyonlar.ST = yeniFormasyon.value.forvet
-    }
-
-    await api.createFormasyon({
-      isim: yeniFormasyon.value.isim,
-      pozisyonlar
-    })
-
-    showToast('Formasyon başarıyla kaydedildi', 'success')
-    formasyonDialog.value = false
-    formasyonlariYukle()
-  } catch (error) {
-    console.error('Formasyon kaydedilirken hata:', error)
-    showToast('Formasyon kaydedilirken bir hata oluştu', 'error')
-  }
-}
-
-const formasyonlariYukle = async () => {
-  try {
-    formasyonlar.value = await api.getFormasyonlar()
-  } catch (error) {
-    console.error('Formasyonlar yüklenirken hata:', error)
-  }
-}
-
-const formasyonDegistir = (takimKodu: 'A' | 'B', formasyonId: number) => {
-  const formasyon = formasyonlar.value.find(f => f.id === formasyonId)
-  if (!formasyon) return
-  
-  const takim = takimKodu === 'A' ? takimA : takimB
-  
-  // Mevcut oyuncuları geçici olarak sakla
-  const mevcutOyuncular: Oyuncu[] = []
-  for (const poz in takim.value.oyuncular) {
-    for (const idx in takim.value.oyuncular[poz]) {
-      const oyuncu = takim.value.oyuncular[poz][idx]
-      if (oyuncu) mevcutOyuncular.push(oyuncu)
-    }
-  }
-  
-  // Takımı sıfırla
-  takim.value.oyuncular = {}
-  
-  // Yeni formasyon yapısını oluştur
-  for (const [poz, adet] of Object.entries(formasyon.pozisyonlar)) {
-    takim.value.oyuncular[poz] = {}
-    // Mevcut oyuncuları yeni pozisyonlara yerleştir
-    for (let i = 0; i < adet; i++) {
-      if (mevcutOyuncular.length > 0) {
-        takim.value.oyuncular[poz][i + 1] = mevcutOyuncular.shift()!
-      }
-    }
-  }
-}
-
 const getPozisyonAciklama = (pozisyon: string, seviye: number) => {
   const pozisyonlar: { [key: string]: string } = {
     ST: 'Forvet',
@@ -788,7 +547,6 @@ const getGucSeviyesi = (guc?: number) => {
 
 onMounted(() => {
   oyunculariYukle()
-  formasyonlariYukle()
   pozisyonlariYukle()
 })
 </script>
