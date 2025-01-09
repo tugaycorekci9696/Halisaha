@@ -97,6 +97,7 @@
                     <div v-if="takimA.oyuncular.ST[i-1]" 
                          class="player-card"
                          :data-guc="getGucSeviyesi(takimA.oyuncular.ST[i-1].guc)"
+                         :data-seviye="takimA.oyuncular.ST[i-1].pozisyonlar?.ST || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', 'ST', i-1)">
                       <VAvatar size="40" class="player-avatar">
@@ -124,6 +125,7 @@
                     <div v-if="takimA.oyuncular[pos][index]" 
                          class="player-card"
                          :data-guc="getGucSeviyesi(takimA.oyuncular[pos][index].guc)"
+                         :data-seviye="takimA.oyuncular[pos][index].pozisyonlar?.[pos as MevkiKodu] || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', pos, index)">
                       <VAvatar size="40" class="player-avatar">
@@ -146,6 +148,7 @@
                     <div v-if="takimA.oyuncular[pos][index+4]" 
                          class="player-card"
                          :data-guc="getGucSeviyesi(takimA.oyuncular[pos][index+4].guc)"
+                         :data-seviye="takimA.oyuncular[pos][index+4].pozisyonlar?.[pos as MevkiKodu] || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', pos, index+4)">
                       <VAvatar size="40" class="player-avatar">
@@ -168,6 +171,7 @@
                     <div v-if="takimA.oyuncular[pos][index+8]" 
                          class="player-card"
                          :data-guc="getGucSeviyesi(takimA.oyuncular[pos][index+8].guc)"
+                         :data-seviye="takimA.oyuncular[pos][index+8].pozisyonlar?.[pos as MevkiKodu] || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', pos, index+8)">
                       <VAvatar size="40" class="player-avatar">
@@ -194,6 +198,7 @@
                     <div v-if="takimA.oyuncular[pos][index]" 
                          class="player-card"
                          :data-guc="getGucSeviyesi(takimA.oyuncular[pos][index].guc)"
+                         :data-seviye="takimA.oyuncular[pos][index].pozisyonlar?.[pos as MevkiKodu] || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', pos, index)">
                       <VAvatar size="40" class="player-avatar">
@@ -218,6 +223,7 @@
                   <div v-if="takimA.oyuncular.GK[0]" 
                        class="player-card"
                        :data-guc="getGucSeviyesi(takimA.oyuncular.GK[0].guc)"
+                       :data-seviye="takimA.oyuncular.GK[0].pozisyonlar?.GK || 1"
                        draggable="true"
                        @dragstart="dragStartPozisyon($event, 'A', 'GK', 0)">
                     <VAvatar size="40" class="player-avatar">
@@ -246,6 +252,7 @@
                     <div v-if="takimB.oyuncular.ST[i-1]" 
                          class="player-card"
                          :data-guc="getGucSeviyesi(takimB.oyuncular.ST[i-1].guc)"
+                         :data-seviye="takimB.oyuncular.ST[i-1].pozisyonlar?.ST || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'B', 'ST', i-1)">
                       <VAvatar size="40" class="player-avatar">
@@ -270,6 +277,7 @@
                     <div v-if="takimB.oyuncular.CM[i-1]" 
                          class="player-card"
                          :data-guc="getGucSeviyesi(takimB.oyuncular.CM[i-1].guc)"
+                         :data-seviye="takimB.oyuncular.CM[i-1].pozisyonlar?.[i-1] || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'B', 'CM', i-1)">
                       <VAvatar size="40" class="player-avatar">
@@ -294,6 +302,7 @@
                     <div v-if="takimB.oyuncular.DC[i-1]" 
                          class="player-card"
                          :data-guc="getGucSeviyesi(takimB.oyuncular.DC[i-1].guc)"
+                         :data-seviye="takimB.oyuncular.DC[i-1].pozisyonlar?.[i-1] || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'B', 'DC', i-1)">
                       <VAvatar size="40" class="player-avatar">
@@ -317,6 +326,7 @@
                      :key="index"
                      class="player-card"
                      :data-guc="getGucSeviyesi(oyuncu.guc)"
+                     :data-seviye="oyuncu.pozisyonlar?.GK || 1"
                      draggable="true"
                      @dragstart="dragStartPozisyon($event, 'B', 'GK', index)">
                   <VAvatar size="40" class="player-avatar">
@@ -1623,6 +1633,32 @@ onMounted(() => {
     0 45%         /* Sol kol uç */
   );
   z-index: -1;
+  transition: background-color 0.3s ease;
+}
+
+/* Seviye 5 - Açık Yeşil */
+.player-card[data-seviye="5"]::before {
+  background-color: #66bb6a;
+}
+
+/* Seviye 4 - Koyu Yeşil */
+.player-card[data-seviye="4"]::before {
+  background-color: #2e7d32;
+}
+
+/* Seviye 3 - Turuncu */
+.player-card[data-seviye="3"]::before {
+  background-color: #ff9800;
+}
+
+/* Seviye 2 - Sarı */
+.player-card[data-seviye="2"]::before {
+  background-color: #ffd700;
+}
+
+/* Seviye 1 veya seçilmemiş - Gri */
+.player-card[data-seviye="1"]::before {
+  background-color: #e0e0e0;
 }
 
 .player-power {
