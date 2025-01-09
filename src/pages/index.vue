@@ -5,7 +5,6 @@
       <VCol cols="12" md="4">
         <VCard>
           <VCardTitle class="d-flex align-center justify-space-between">
-            <VSpacer />
             <div class="d-flex gap-2">
               <VBtn
                 color="error"
@@ -15,6 +14,27 @@
               >
                 Sıfırla
               </VBtn>
+              <VBtn
+                color="primary"
+                size="small"
+                prepend-icon="tabler-users"
+                @click="grupDialog = true"
+              >
+                Gruplar
+              </VBtn>
+              <VSelect
+                v-model="seciliGruplar"
+                :items="gruplar"
+                item-title="isim"
+                item-value="id"
+                label="Gruplar"
+                multiple
+                chips
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="min-w-[200px]"
+              />
             </div>
           </VCardTitle>
           <VCardText>
@@ -23,32 +43,48 @@
               <div class="text-body-1 mt-2">Oyuncular Yükleniyor...</div>
             </div>
             <div v-else>
-              <div v-for="oyuncu in filtrelenmisOyuncular" 
-                   :key="oyuncu.id"
-                   class="oyuncu-listesi-item"
-                   draggable="true"
-                   @dragstart="(e) => dragStart(e, oyuncu)">
-                <div class="d-flex align-center">
-                  <VAvatar size="40" class="me-3">
-                    <VImg v-if="oyuncu.resim" :src="oyuncu.resim" />
-                    <VIcon v-else icon="tabler-user" />
-                  </VAvatar>
-                  <div class="oyuncu-bilgi flex-grow-1">
-                    <div class="text-subtitle-2">{{ oyuncu.adSoyad }}</div>
-                    <div class="pozisyon-dots d-flex gap-1 mt-1">
-                      <template v-for="(seviye, poz) in siraliPozisyonlar(oyuncu.pozisyonlar || {})" :key="poz">
-                        <div v-if="seviye >= 3"
-                             class="pozisyon-dot"
-                             :class="[poz, `seviye-${seviye}`]"
-                             :title="getPozisyonAciklama(String(poz), seviye)">
-                          {{ poz }}
-                        </div>
-                      </template>
+              <div class="oyuncu-havuzu">
+                <div class="oyuncu-listesi">
+                  <div
+                    v-for="oyuncu in filtrelenmisOyuncular"
+                    :key="oyuncu.id"
+                    class="oyuncu-karti"
+                    draggable="true"
+                    @dragstart="dragStart($event, oyuncu)"
+                  >
+                    <div class="oyuncu-resim">
+                      <VAvatar size="40">
+                        <VImg
+                          v-if="oyuncu.resim"
+                          :src="oyuncu.resim"
+                          alt="Oyuncu resmi"
+                        />
+                        <VIcon v-else icon="tabler-user" />
+                      </VAvatar>
+                    </div>
+                    <div class="oyuncu-bilgi">
+                      <div class="oyuncu-adi">{{ oyuncu.adSoyad }}</div>
+                      <div class="oyuncu-pozisyonlar">
+                        <template v-if="oyuncu.pozisyonlar">
+                          <template v-for="(seviye, poz) in siraliPozisyonlar(oyuncu.pozisyonlar)" :key="poz">
+                            <div v-if="Number(seviye) >= 3"
+                                 :class="['position-mini-box', `level-${seviye}`]"
+                                 :title="getPozisyonAciklama(String(poz), Number(seviye))">
+                              {{ poz }}
+                            </div>
+                          </template>
+                        </template>
+                      </div>
+                    </div>
+                    <div class="oyuncu-guc">
+                      <VChip
+                        :color="oyuncuGucRengi(oyuncu.guc)"
+                        class="font-weight-bold"
+                      >
+                        {{ oyuncu.guc || '-' }}
+                      </VChip>
                     </div>
                   </div>
-                  <VChip :color="oyuncuGucRengi(oyuncu.guc)" size="small">
-                    {{ oyuncu.guc }}
-                  </VChip>
                 </div>
               </div>
             </div>
@@ -259,19 +295,118 @@
         </VBtn>
       </template>
     </VSnackbar>
+
+    <!-- Grup Yönetimi Dialog -->
+    <VDialog v-model="grupDialog" max-width="500">
+      <VCard>
+        <VCardTitle>Grup Yönetimi</VCardTitle>
+        <VCardText>
+          <VForm @submit.prevent="yeniGrupEkle" class="mb-4">
+            <div class="d-flex gap-2">
+              <VTextField
+                v-model="yeniGrup.isim"
+                label="Yeni Grup İsmi"
+                variant="outlined"
+                density="compact"
+                hide-details
+              />
+              <VBtn
+                color="success"
+                type="submit"
+                :disabled="!yeniGrup.isim"
+              >
+                Ekle
+              </VBtn>
+            </div>
+          </VForm>
+
+          <VList lines="two">
+            <VListItem
+              v-for="grup in gruplar"
+              :key="grup.id"
+              :value="grup.id"
+            >
+              <template v-slot:prepend>
+                <VIcon icon="tabler-users" />
+              </template>
+              
+              <VListItemTitle>
+                <div class="d-flex align-center justify-space-between">
+                  <div v-if="!grup.duzenleniyor">{{ grup.isim }}</div>
+                  <VTextField
+                    v-else
+                    v-model="grup.yeniIsim"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    autofocus
+                    @keyup.enter="grupIsmiKaydet(grup)"
+                    @blur="grupIsmiKaydet(grup)"
+                  />
+                  <div class="d-flex gap-2">
+                    <VBtn
+                      v-if="!grup.duzenleniyor"
+                      icon="tabler-edit"
+                      size="small"
+                      variant="text"
+                      @click="grupDuzenle(grup)"
+                    />
+                    <VBtn
+                      icon="tabler-trash"
+                      size="small"
+                      color="error"
+                      variant="text"
+                      @click="grupSil(grup.id)"
+                    />
+                  </div>
+                </div>
+              </VListItemTitle>
+              
+              <VListItemSubtitle>
+                {{ grup.oyuncuSayisi }} oyuncu
+              </VListItemSubtitle>
+            </VListItem>
+          </VList>
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+          <VBtn
+            color="primary"
+            @click="grupDialog = false"
+          >
+            Kapat
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import api from '@/services/api'
-import { computed, onMounted, ref } from 'vue'
+import type { Grup } from '@/services/api';
+import api from '@/services/api';
+import { computed, onMounted, ref } from 'vue';
+
+interface Pozisyonlar {
+  GK: number;
+  ST?: number;
+  LW?: number;
+  OOS?: number;
+  RW?: number;
+  CM?: number;
+  DM?: number;
+  DL?: number;
+  DC?: number;
+  DR?: number;
+}
 
 interface Oyuncu {
-  id: number
-  adSoyad: string
-  resim?: string
-  guc?: number
-  pozisyonlar?: Pozisyonlar
+  id: number;
+  adSoyad: string;
+  resim?: string;
+  guc?: number;
+  pozisyonlar?: Pozisyonlar;
+  gruplar?: Grup[];
 }
 
 interface Takim {
@@ -282,19 +417,6 @@ interface Takim {
       [key: number]: Oyuncu
     }
   }
-}
-
-interface Pozisyonlar {
-  GK: number
-  ST?: number
-  LW?: number
-  OOS?: number
-  RW?: number
-  CM?: number
-  DM?: number
-  DL?: number
-  DC?: number
-  DR?: number
 }
 
 interface Formasyon {
@@ -335,14 +457,36 @@ const formasyonlar = ref<Formasyon[]>([])
 
 const pozisyonlar = ref<Pozisyon[]>([])
 
+const seciliGruplar = ref<number[]>([])
+
+// Filtrelenmiş oyuncular
 const filtrelenmisOyuncular = computed(() => {
-  return havuzdakiOyuncular.value.filter(oyuncu => !oyuncununTakimi(oyuncu.id))
+  if (seciliGruplar.value.length === 0) return havuzdakiOyuncular.value
+
+  return havuzdakiOyuncular.value.filter(oyuncu => 
+    oyuncu.gruplar?.some(grup => seciliGruplar.value.includes(grup.id))
+  )
 })
 
 // Oyuncuları yükle
 const oyunculariYukle = async () => {
   try {
-    havuzdakiOyuncular.value = await api.getOyuncular()
+    const oyuncular = await api.getOyuncular()
+    havuzdakiOyuncular.value = oyuncular.map(o => ({
+      ...o,
+      pozisyonlar: {
+        GK: o.pozisyonlar?.GK || 1,
+        ST: o.pozisyonlar?.ST,
+        LW: o.pozisyonlar?.LW,
+        OOS: o.pozisyonlar?.OOS,
+        RW: o.pozisyonlar?.RW,
+        CM: o.pozisyonlar?.CM,
+        DM: o.pozisyonlar?.DM,
+        DL: o.pozisyonlar?.DL,
+        DC: o.pozisyonlar?.DC,
+        DR: o.pozisyonlar?.DR
+      }
+    }))
   } catch (error) {
     console.error('Oyuncular yüklenirken hata:', error)
   }
@@ -491,7 +635,9 @@ const getPozisyonAciklama = (pozisyon: string, seviye: number) => {
 // Pozisyonları yükle
 const pozisyonlariYukle = async () => {
   try {
-    pozisyonlar.value = await api.getPozisyonlar()
+    const response = await fetch('http://localhost:3000/api/pozisyonlar')
+    const data = await response.json()
+    pozisyonlar.value = data
   } catch (error) {
     console.error('Pozisyonlar yüklenirken hata:', error)
   }
@@ -545,9 +691,82 @@ const getGucSeviyesi = (guc?: number) => {
   return 'mukemmel'
 }
 
+const grupDialog = ref(false)
+const gruplar = ref<Grup[]>([])
+const yeniGrup = ref({
+  isim: ''
+})
+
+// Grupları yükle
+const gruplariYukle = async () => {
+  try {
+    gruplar.value = await api.getGruplar()
+  } catch (error) {
+    console.error('Gruplar yüklenirken hata:', error)
+  }
+}
+
+// Yeni grup ekle
+const yeniGrupEkle = async () => {
+  try {
+    if (!yeniGrup.value.isim) return
+
+    await api.createGrup({
+      isim: yeniGrup.value.isim
+    })
+
+    yeniGrup.value.isim = ''
+    await gruplariYukle()
+    showToast('Grup başarıyla eklendi', 'success')
+  } catch (error) {
+    console.error('Grup eklenirken hata:', error)
+    showToast('Grup eklenirken bir hata oluştu', 'error')
+  }
+}
+
+// Grup düzenle
+const grupDuzenle = (grup: Grup) => {
+  grup.duzenleniyor = true
+  grup.yeniIsim = grup.isim
+}
+
+// Grup ismini kaydet
+const grupIsmiKaydet = async (grup: Grup) => {
+  try {
+    if (!grup.yeniIsim || grup.yeniIsim === grup.isim) {
+      grup.duzenleniyor = false
+      return
+    }
+
+    await api.updateGrup(grup.id, {
+      isim: grup.yeniIsim
+    })
+
+    grup.isim = grup.yeniIsim
+    grup.duzenleniyor = false
+    showToast('Grup ismi güncellendi', 'success')
+  } catch (error) {
+    console.error('Grup güncellenirken hata:', error)
+    showToast('Grup güncellenirken bir hata oluştu', 'error')
+  }
+}
+
+// Grup sil
+const grupSil = async (grupId: number) => {
+  try {
+    await api.deleteGrup(grupId)
+    await gruplariYukle()
+    showToast('Grup başarıyla silindi', 'success')
+  } catch (error) {
+    console.error('Grup silinirken hata:', error)
+    showToast('Grup silinirken bir hata oluştu', 'error')
+  }
+}
+
 onMounted(() => {
   oyunculariYukle()
   pozisyonlariYukle()
+  gruplariYukle()
 })
 </script>
 
@@ -912,5 +1131,73 @@ onMounted(() => {
 .empty-slot:hover {
   border-color: rgba(255, 255, 255, 0.8);
   color: white;
+}
+
+.oyuncu-havuzu {
+  margin-top: 1rem;
+}
+
+.oyuncu-listesi {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.oyuncu-karti {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background-color: rgb(var(--v-theme-surface));
+  border-radius: 8px;
+  cursor: move;
+  transition: all 0.2s ease;
+}
+
+.oyuncu-karti:hover {
+  background-color: rgb(var(--v-theme-surface-variant));
+}
+
+.oyuncu-bilgi {
+  flex: 1;
+}
+
+.oyuncu-adi {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.oyuncu-pozisyonlar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.position-mini-box {
+  font-size: 0.75rem;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: bold;
+  min-width: 32px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.level-1 { background-color: white; color: #333; text-shadow: none; }
+.level-2 { background-color: #ffd700; color: #333; } /* Sarı - Kötü */
+.level-3 { background-color: #ff9800; color: white; } /* Turuncu - Ortalama */
+.level-4 { background-color: #2e7d32; color: white; } /* Koyu Yeşil - İyi */
+.level-5 { background-color: #66bb6a; color: white; } /* Açık Yeşil - Çok İyi */
+
+@media (max-width: 600px) {
+  .oyuncu-listesi {
+    grid-template-columns: 1fr;
+  }
+
+  .position-mini-box {
+    font-size: 0.7rem;
+    padding: 1px 3px;
+    min-width: 28px;
+  }
 }
 </style>
