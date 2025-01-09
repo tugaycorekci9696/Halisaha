@@ -88,8 +88,8 @@
         <VRow>
           <VCol cols="12" md="6">
             <VCard height="600" class="grid-card">
-              <div class="position-area forvet-area" 
-                   @dragover.prevent>
+              <!-- Forvet Alanı -->
+              <div class="position-area forvet-area" @dragover.prevent>
                 <div class="position-grid">
                   <div v-for="i in 4" :key="i" class="position-slot"
                        @dragover.prevent
@@ -106,70 +106,130 @@
                       <div class="player-power">{{ takimA.oyuncular.ST[i-1].guc }}</div>
                       <span class="player-name">{{ takimA.oyuncular.ST[i-1].adSoyad }}</span>
                     </div>
-                    <div v-else class="empty-slot">+</div>
+                    <div v-else class="empty-slot">
+                      <span class="position-text">ST</span>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="position-area ortasaha-area"
-                   @dragover.prevent>
+
+              <!-- Orta Saha Alanı -->
+              <div class="position-area ortasaha-area" @dragover.prevent>
                 <div class="position-grid">
-                  <div v-for="i in 12" :key="i" class="position-slot"
+                  <!-- İlk Sıra: LW, OOS, OOS, RW -->
+                  <div v-for="(pos, index) in ['LW', 'OOS', 'OOS', 'RW']" :key="'row1-'+index" 
+                       class="position-slot"
                        @dragover.prevent
-                       @drop="dropOnArea($event, 'A', 'CM', i-1)">
-                    <div v-if="takimA.oyuncular.CM[i-1]" 
+                       @drop="dropOnArea($event, 'A', pos, index)">
+                    <div v-if="takimA.oyuncular[pos][index]" 
                          class="player-card"
-                         :data-guc="getGucSeviyesi(takimA.oyuncular.CM[i-1].guc)"
+                         :data-guc="getGucSeviyesi(takimA.oyuncular[pos][index].guc)"
                          draggable="true"
-                         @dragstart="dragStartPozisyon($event, 'A', 'CM', i-1)">
+                         @dragstart="dragStartPozisyon($event, 'A', pos, index)">
                       <VAvatar size="40" class="player-avatar">
-                        <VImg v-if="takimA.oyuncular.CM[i-1].resim" :src="takimA.oyuncular.CM[i-1].resim" />
+                        <VImg v-if="takimA.oyuncular[pos][index].resim" :src="takimA.oyuncular[pos][index].resim" />
                         <VIcon v-else icon="tabler-user" />
                       </VAvatar>
-                      <div class="player-power">{{ takimA.oyuncular.CM[i-1].guc }}</div>
-                      <span class="player-name">{{ takimA.oyuncular.CM[i-1].adSoyad }}</span>
+                      <div class="player-power">{{ takimA.oyuncular[pos][index].guc }}</div>
+                      <span class="player-name">{{ takimA.oyuncular[pos][index].adSoyad }}</span>
                     </div>
-                    <div v-else class="empty-slot">+</div>
+                    <div v-else class="empty-slot">
+                      <span class="position-text">{{ pos }}</span>
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div class="position-area defans-area"
-                   @dragover.prevent>
-                <div class="position-grid">
-                  <div v-for="i in 4" :key="i" class="position-slot"
+
+                  <!-- İkinci Sıra: LW, CM, CM, RW -->
+                  <div v-for="(pos, index) in ['LW', 'CM', 'CM', 'RW']" :key="'row2-'+index" 
+                       class="position-slot"
                        @dragover.prevent
-                       @drop="dropOnArea($event, 'A', 'DC', i-1)">
-                    <div v-if="takimA.oyuncular.DC[i-1]" 
+                       @drop="dropOnArea($event, 'A', pos, index+4)">
+                    <div v-if="takimA.oyuncular[pos][index+4]" 
                          class="player-card"
-                         :data-guc="getGucSeviyesi(takimA.oyuncular.DC[i-1].guc)"
+                         :data-guc="getGucSeviyesi(takimA.oyuncular[pos][index+4].guc)"
                          draggable="true"
-                         @dragstart="dragStartPozisyon($event, 'A', 'DC', i-1)">
+                         @dragstart="dragStartPozisyon($event, 'A', pos, index+4)">
                       <VAvatar size="40" class="player-avatar">
-                        <VImg v-if="takimA.oyuncular.DC[i-1].resim" :src="takimA.oyuncular.DC[i-1].resim" />
+                        <VImg v-if="takimA.oyuncular[pos][index+4].resim" :src="takimA.oyuncular[pos][index+4].resim" />
                         <VIcon v-else icon="tabler-user" />
                       </VAvatar>
-                      <div class="player-power">{{ takimA.oyuncular.DC[i-1].guc }}</div>
-                      <span class="player-name">{{ takimA.oyuncular.DC[i-1].adSoyad }}</span>
+                      <div class="player-power">{{ takimA.oyuncular[pos][index+4].guc }}</div>
+                      <span class="player-name">{{ takimA.oyuncular[pos][index+4].adSoyad }}</span>
                     </div>
-                    <div v-else class="empty-slot">+</div>
+                    <div v-else class="empty-slot">
+                      <span class="position-text">{{ pos }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Üçüncü Sıra: LW, DM, DM, RW -->
+                  <div v-for="(pos, index) in ['LW', 'DM', 'DM', 'RW']" :key="'row3-'+index" 
+                       class="position-slot"
+                       @dragover.prevent
+                       @drop="dropOnArea($event, 'A', pos, index+8)">
+                    <div v-if="takimA.oyuncular[pos][index+8]" 
+                         class="player-card"
+                         :data-guc="getGucSeviyesi(takimA.oyuncular[pos][index+8].guc)"
+                         draggable="true"
+                         @dragstart="dragStartPozisyon($event, 'A', pos, index+8)">
+                      <VAvatar size="40" class="player-avatar">
+                        <VImg v-if="takimA.oyuncular[pos][index+8].resim" :src="takimA.oyuncular[pos][index+8].resim" />
+                        <VIcon v-else icon="tabler-user" />
+                      </VAvatar>
+                      <div class="player-power">{{ takimA.oyuncular[pos][index+8].guc }}</div>
+                      <span class="player-name">{{ takimA.oyuncular[pos][index+8].adSoyad }}</span>
+                    </div>
+                    <div v-else class="empty-slot">
+                      <span class="position-text">{{ pos }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="position-area kaleci-area"
-                   @dragover.prevent
-                   @drop="dropOnArea($event, 'A', 'GK', 0)">
-                <!-- Kaleci -->
-                <div v-for="(oyuncu, index) in takimA.oyuncular.GK" 
-                     :key="index"
-                     class="player-card"
-                     :data-guc="getGucSeviyesi(oyuncu.guc)"
-                     draggable="true"
-                     @dragstart="dragStartPozisyon($event, 'A', 'GK', index)">
-                  <VAvatar size="40" class="player-avatar">
-                    <VImg v-if="oyuncu.resim" :src="oyuncu.resim" />
-                    <VIcon v-else icon="tabler-user" />
-                  </VAvatar>
-                  <div class="player-power">{{ oyuncu.guc }}</div>
-                  <span class="player-name">{{ oyuncu.adSoyad }}</span>
+
+              <!-- Defans Alanı -->
+              <div class="position-area defans-area" @dragover.prevent>
+                <div class="position-grid">
+                  <div v-for="(pos, index) in ['DL', 'DC', 'DC', 'DR']" :key="index" 
+                       class="position-slot"
+                       @dragover.prevent
+                       @drop="dropOnArea($event, 'A', pos, index)">
+                    <div v-if="takimA.oyuncular[pos][index]" 
+                         class="player-card"
+                         :data-guc="getGucSeviyesi(takimA.oyuncular[pos][index].guc)"
+                         draggable="true"
+                         @dragstart="dragStartPozisyon($event, 'A', pos, index)">
+                      <VAvatar size="40" class="player-avatar">
+                        <VImg v-if="takimA.oyuncular[pos][index].resim" :src="takimA.oyuncular[pos][index].resim" />
+                        <VIcon v-else icon="tabler-user" />
+                      </VAvatar>
+                      <div class="player-power">{{ takimA.oyuncular[pos][index].guc }}</div>
+                      <span class="player-name">{{ takimA.oyuncular[pos][index].adSoyad }}</span>
+                    </div>
+                    <div v-else class="empty-slot">
+                      <span class="position-text">{{ pos }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Kaleci Alanı -->
+              <div class="position-area kaleci-area" @dragover.prevent>
+                <div class="position-slot"
+                     @dragover.prevent
+                     @drop="dropOnArea($event, 'A', 'GK', 0)">
+                  <div v-if="takimA.oyuncular.GK[0]" 
+                       class="player-card"
+                       :data-guc="getGucSeviyesi(takimA.oyuncular.GK[0].guc)"
+                       draggable="true"
+                       @dragstart="dragStartPozisyon($event, 'A', 'GK', 0)">
+                    <VAvatar size="40" class="player-avatar">
+                      <VImg v-if="takimA.oyuncular.GK[0].resim" :src="takimA.oyuncular.GK[0].resim" />
+                      <VIcon v-else icon="tabler-user" />
+                    </VAvatar>
+                    <div class="player-power">{{ takimA.oyuncular.GK[0].guc }}</div>
+                    <span class="player-name">{{ takimA.oyuncular.GK[0].adSoyad }}</span>
+                  </div>
+                  <div v-else class="empty-slot">
+                    <span class="position-text">GK</span>
+                  </div>
                 </div>
               </div>
             </VCard>
@@ -195,7 +255,9 @@
                       <div class="player-power">{{ takimB.oyuncular.ST[i-1].guc }}</div>
                       <span class="player-name">{{ takimB.oyuncular.ST[i-1].adSoyad }}</span>
                     </div>
-                    <div v-else class="empty-slot">+</div>
+                    <div v-else class="empty-slot">
+                      <span class="position-text">ST</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -217,7 +279,9 @@
                       <div class="player-power">{{ takimB.oyuncular.CM[i-1].guc }}</div>
                       <span class="player-name">{{ takimB.oyuncular.CM[i-1].adSoyad }}</span>
                     </div>
-                    <div v-else class="empty-slot">+</div>
+                    <div v-else class="empty-slot">
+                      <span class="position-text">CM</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -239,7 +303,9 @@
                       <div class="player-power">{{ takimB.oyuncular.DC[i-1].guc }}</div>
                       <span class="player-name">{{ takimB.oyuncular.DC[i-1].adSoyad }}</span>
                     </div>
-                    <div v-else class="empty-slot">+</div>
+                    <div v-else class="empty-slot">
+                      <span class="position-text">DC</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -391,6 +457,45 @@ interface Pozisyonlar {
   DR?: number;
 }
 
+interface Yetenekler {
+  bitiricilik?: number;
+  dripling?: number;
+  ilkKontrol?: number;
+  kafaVurusu?: number;
+  korner?: number;
+  markaj?: number;
+  ortaYapma?: number;
+  pas?: number;
+  penaltiKullanma?: number;
+  serbestVurus?: number;
+  teknik?: number;
+  topKapma?: number;
+  uzaktanSut?: number;
+  uzunTac?: number;
+  agresiflik?: number;
+  cesaret?: number;
+  caliskanlik?: number;
+  kararAlma?: number;
+  kararlilik?: number;
+  konsantrasyon?: number;
+  liderlik?: number;
+  onsezi?: number;
+  ozelYetenek?: number;
+  pozisyonAlma?: number;
+  sogukkanlilik?: number;
+  takimOyunu?: number;
+  topsuzAlan?: number;
+  vizyon?: number;
+  ceviklik?: number;
+  dayaniklilik?: number;
+  denge?: number;
+  guc?: number;
+  hiz?: number;
+  hizlanma?: number;
+  vucutZindeligi?: number;
+  ziplama?: number;
+}
+
 interface Oyuncu {
   id: number;
   adSoyad: string;
@@ -398,6 +503,392 @@ interface Oyuncu {
   guc?: number;
   pozisyonlar?: Pozisyonlar;
   gruplar?: Grup[];
+  yetenekler?: { [key: string]: number };
+}
+
+type MevkiKodu = 'ST' | 'CM' | 'LW' | 'RW' | 'OOS' | 'DM' | 'DL' | 'DC' | 'DR' | 'GK';
+
+const mevkiKatsayilari: Record<MevkiKodu, Record<keyof Yetenekler, number>> = {
+  ST: {
+    bitiricilik: 5,
+    dripling: 4,
+    ilkKontrol: 4,
+    kafaVurusu: 4,
+    korner: 1,
+    markaj: 1,
+    ortaYapma: 1,
+    pas: 3,
+    penaltiKullanma: 4,
+    serbestVurus: 1,
+    teknik: 3,
+    topKapma: 1,
+    uzaktanSut: 3,
+    uzunTac: 1,
+    agresiflik: 2,
+    cesaret: 2,
+    caliskanlik: 4,
+    kararAlma: 3,
+    kararlilik: 2,
+    konsantrasyon: 3,
+    liderlik: 1,
+    onsezi: 4,
+    ozelYetenek: 2,
+    pozisyonAlma: 3,
+    sogukkanlilik: 4,
+    takimOyunu: 4,
+    topsuzAlan: 5,
+    vizyon: 4,
+    ceviklik: 3,
+    dayaniklilik: 4,
+    denge: 4,
+    guc: 4,
+    hiz: 4,
+    hizlanma: 4,
+    vucutZindeligi: 3,
+    ziplama: 4
+  },
+  CM: {
+    bitiricilik: 3,
+    dripling: 3,
+    ilkKontrol: 4,
+    kafaVurusu: 2,
+    korner: 3,
+    markaj: 4,
+    ortaYapma: 3,
+    pas: 5,
+    penaltiKullanma: 3,
+    serbestVurus: 4,
+    teknik: 4,
+    topKapma: 3,
+    uzaktanSut: 4,
+    uzunTac: 1,
+    agresiflik: 3,
+    cesaret: 2,
+    caliskanlik: 3,
+    kararAlma: 3,
+    kararlilik: 2,
+    konsantrasyon: 3,
+    liderlik: 3,
+    onsezi: 3,
+    ozelYetenek: 4,
+    pozisyonAlma: 3,
+    sogukkanlilik: 2,
+    takimOyunu: 4,
+    topsuzAlan: 4,
+    vizyon: 4,
+    ceviklik: 3,
+    dayaniklilik: 5,
+    denge: 2,
+    guc: 2,
+    hiz: 3,
+    hizlanma: 3,
+    vucutZindeligi: 3,
+    ziplama: 2
+  },
+  LW: {
+    bitiricilik: 4,
+    dripling: 5,
+    ilkKontrol: 4,
+    kafaVurusu: 3,
+    korner: 2,
+    markaj: 2,
+    ortaYapma: 4,
+    pas: 3,
+    penaltiKullanma: 2,
+    serbestVurus: 2,
+    teknik: 4,
+    topKapma: 2,
+    uzaktanSut: 3,
+    uzunTac: 1,
+    agresiflik: 1,
+    cesaret: 1,
+    caliskanlik: 3,
+    kararAlma: 2,
+    kararlilik: 2,
+    konsantrasyon: 2,
+    liderlik: 3,
+    onsezi: 3,
+    ozelYetenek: 4,
+    pozisyonAlma: 2,
+    sogukkanlilik: 3,
+    takimOyunu: 3,
+    topsuzAlan: 3,
+    vizyon: 4,
+    ceviklik: 4,
+    dayaniklilik: 4,
+    denge: 4,
+    guc: 3,
+    hiz: 5,
+    hizlanma: 4,
+    vucutZindeligi: 4,
+    ziplama: 3
+  },
+  RW: {
+    bitiricilik: 4,
+    dripling: 5,
+    ilkKontrol: 4,
+    kafaVurusu: 3,
+    korner: 2,
+    markaj: 2,
+    ortaYapma: 4,
+    pas: 3,
+    penaltiKullanma: 2,
+    serbestVurus: 2,
+    teknik: 4,
+    topKapma: 2,
+    uzaktanSut: 3,
+    uzunTac: 1,
+    agresiflik: 1,
+    cesaret: 1,
+    caliskanlik: 3,
+    kararAlma: 2,
+    kararlilik: 2,
+    konsantrasyon: 2,
+    liderlik: 3,
+    onsezi: 3,
+    ozelYetenek: 4,
+    pozisyonAlma: 2,
+    sogukkanlilik: 3,
+    takimOyunu: 3,
+    topsuzAlan: 3,
+    vizyon: 4,
+    ceviklik: 4,
+    dayaniklilik: 4,
+    denge: 4,
+    guc: 3,
+    hiz: 5,
+    hizlanma: 4,
+    vucutZindeligi: 4,
+    ziplama: 3
+  },
+  OOS: {
+    bitiricilik: 4,
+    dripling: 4,
+    ilkKontrol: 4,
+    kafaVurusu: 2,
+    korner: 5,
+    markaj: 1,
+    ortaYapma: 3,
+    pas: 5,
+    penaltiKullanma: 5,
+    serbestVurus: 4,
+    teknik: 5,
+    topKapma: 2,
+    uzaktanSut: 4,
+    uzunTac: 1,
+    agresiflik: 2,
+    cesaret: 1,
+    caliskanlik: 2,
+    kararAlma: 3,
+    kararlilik: 1,
+    konsantrasyon: 2,
+    liderlik: 1,
+    onsezi: 3,
+    ozelYetenek: 5,
+    pozisyonAlma: 2,
+    sogukkanlilik: 4,
+    takimOyunu: 1,
+    topsuzAlan: 3,
+    vizyon: 5,
+    ceviklik: 4,
+    dayaniklilik: 2,
+    denge: 3,
+    guc: 2,
+    hiz: 2,
+    hizlanma: 3,
+    vucutZindeligi: 3,
+    ziplama: 1
+  },
+  DM: {
+    bitiricilik: 1,
+    dripling: 1,
+    ilkKontrol: 4,
+    kafaVurusu: 1,
+    korner: 1,
+    markaj: 4,
+    ortaYapma: 1,
+    pas: 4,
+    penaltiKullanma: 1,
+    serbestVurus: 1,
+    teknik: 2,
+    topKapma: 4,
+    uzaktanSut: 2,
+    uzunTac: 1,
+    agresiflik: 2,
+    cesaret: 1,
+    caliskanlik: 3,
+    kararAlma: 4,
+    kararlilik: 1,
+    konsantrasyon: 4,
+    liderlik: 3,
+    onsezi: 4,
+    ozelYetenek: 1,
+    pozisyonAlma: 5,
+    sogukkanlilik: 4,
+    takimOyunu: 3,
+    topsuzAlan: 4,
+    vizyon: 2,
+    ceviklik: 1,
+    dayaniklilik: 3,
+    denge: 2,
+    guc: 4,
+    hiz: 2,
+    hizlanma: 2,
+    vucutZindeligi: 2,
+    ziplama: 3
+  },
+  DL: {
+    bitiricilik: 1,
+    dripling: 2,
+    ilkKontrol: 2,
+    kafaVurusu: 2,
+    korner: 1,
+    markaj: 3,
+    ortaYapma: 4,
+    pas: 3,
+    penaltiKullanma: 1,
+    serbestVurus: 1,
+    teknik: 3,
+    topKapma: 3,
+    uzaktanSut: 1,
+    uzunTac: 2,
+    agresiflik: 2,
+    cesaret: 2,
+    caliskanlik: 4,
+    kararAlma: 3,
+    kararlilik: 1,
+    konsantrasyon: 3,
+    liderlik: 1,
+    onsezi: 3,
+    ozelYetenek: 1,
+    pozisyonAlma: 3,
+    sogukkanlilik: 1,
+    takimOyunu: 3,
+    topsuzAlan: 2,
+    vizyon: 1,
+    ceviklik: 4,
+    dayaniklilik: 4,
+    denge: 2,
+    guc: 1,
+    hiz: 4,
+    hizlanma: 3,
+    vucutZindeligi: 2,
+    ziplama: 2
+  },
+  DC: {
+    bitiricilik: 1,
+    dripling: 1,
+    ilkKontrol: 2,
+    kafaVurusu: 3,
+    korner: 1,
+    markaj: 4,
+    ortaYapma: 1,
+    pas: 3,
+    penaltiKullanma: 1,
+    serbestVurus: 1,
+    teknik: 1,
+    topKapma: 5,
+    uzaktanSut: 1,
+    uzunTac: 1,
+    agresiflik: 3,
+    cesaret: 3,
+    caliskanlik: 2,
+    kararAlma: 1,
+    kararlilik: 2,
+    konsantrasyon: 3,
+    liderlik: 2,
+    onsezi: 2,
+    ozelYetenek: 1,
+    pozisyonAlma: 5,
+    sogukkanlilik: 2,
+    takimOyunu: 2,
+    topsuzAlan: 2,
+    vizyon: 1,
+    ceviklik: 2,
+    dayaniklilik: 2,
+    denge: 2,
+    guc: 4,
+    hiz: 3,
+    hizlanma: 3,
+    vucutZindeligi: 3,
+    ziplama: 4
+  },
+  DR: {
+    bitiricilik: 1,
+    dripling: 2,
+    ilkKontrol: 2,
+    kafaVurusu: 2,
+    korner: 1,
+    markaj: 3,
+    ortaYapma: 4,
+    pas: 3,
+    penaltiKullanma: 1,
+    serbestVurus: 1,
+    teknik: 3,
+    topKapma: 3,
+    uzaktanSut: 1,
+    uzunTac: 2,
+    agresiflik: 2,
+    cesaret: 2,
+    caliskanlik: 4,
+    kararAlma: 3,
+    kararlilik: 1,
+    konsantrasyon: 3,
+    liderlik: 1,
+    onsezi: 3,
+    ozelYetenek: 1,
+    pozisyonAlma: 3,
+    sogukkanlilik: 1,
+    takimOyunu: 3,
+    topsuzAlan: 2,
+    vizyon: 1,
+    ceviklik: 4,
+    dayaniklilik: 4,
+    denge: 2,
+    guc: 1,
+    hiz: 4,
+    hizlanma: 3,
+    vucutZindeligi: 2,
+    ziplama: 2
+  },
+  GK: {
+    bitiricilik: 1,
+    dripling: 1,
+    ilkKontrol: 3,
+    kafaVurusu: 2,
+    korner: 1,
+    markaj: 1,
+    ortaYapma: 2,
+    pas: 3,
+    penaltiKullanma: 1,
+    serbestVurus: 1,
+    teknik: 2,
+    topKapma: 5,
+    uzaktanSut: 1,
+    uzunTac: 1,
+    agresiflik: 3,
+    cesaret: 4,
+    caliskanlik: 3,
+    kararAlma: 4,
+    kararlilik: 4,
+    konsantrasyon: 5,
+    liderlik: 3,
+    onsezi: 4,
+    ozelYetenek: 2,
+    pozisyonAlma: 5,
+    sogukkanlilik: 4,
+    takimOyunu: 2,
+    topsuzAlan: 3,
+    vizyon: 3,
+    ceviklik: 4,
+    dayaniklilik: 3,
+    denge: 4,
+    guc: 3,
+    hiz: 3,
+    hizlanma: 3,
+    vucutZindeligi: 3,
+    ziplama: 4
+  }
 }
 
 interface Takim {
@@ -530,7 +1021,7 @@ const dropOnArea = (event: DragEvent, takimKodu: 'A' | 'B', pozisyon: string, he
     const kaynakTakimObj = kaynakTakim === 'A' ? takimA : takimB;
     oyuncu = kaynakTakimObj.value.oyuncular[kaynakPozisyon!][Number(kaynakIndex)];
     
-      // Eski pozisyondan kaldır
+    // Eski pozisyondan kaldır
     if (oyuncu) {
       delete kaynakTakimObj.value.oyuncular[kaynakPozisyon!][Number(kaynakIndex)];
 
@@ -542,6 +1033,10 @@ const dropOnArea = (event: DragEvent, takimKodu: 'A' | 'B', pozisyon: string, he
   }
 
   if (!oyuncu) return;
+
+  // Oyuncunun yeni pozisyondaki gücünü hesapla
+  const yeniGuc = hesaplaMevkiGucu(oyuncu, pozisyon)
+  oyuncu = { ...oyuncu, guc: yeniGuc }
 
   // Yeni pozisyona ekle
   hedefTakim.value.oyuncular[pozisyon][hedefIndex] = oyuncu;
@@ -769,6 +1264,85 @@ const seciliGruplarText = computed(() => {
     .join(', ')
 })
 
+const yetenekIsmiDonustur = (yetenekAdi: string): string => {
+  const donusumTablosu: { [key: string]: string } = {
+    'Bitiricilik': 'bitiricilik',
+    'Dripling': 'dripling',
+    'İlk Kontrol': 'ilkKontrol',
+    'Kafa Vuruşu': 'kafaVurusu',
+    'Korner': 'korner',
+    'Markaj': 'markaj',
+    'Orta Yapma': 'ortaYapma',
+    'Pas': 'pas',
+    'Penaltı Kullanma': 'penaltiKullanma',
+    'Serbest Vuruş': 'serbestVurus',
+    'Teknik': 'teknik',
+    'Top Kapma': 'topKapma',
+    'Uzaktan Şut': 'uzaktanSut',
+    'Uzun Taç': 'uzunTac',
+    'Agresiflik': 'agresiflik',
+    'Cesaret': 'cesaret',
+    'Çalışkanlık': 'caliskanlik',
+    'Karar Alma': 'kararAlma',
+    'Kararlılık': 'kararlilik',
+    'Konsantrasyon': 'konsantrasyon',
+    'Liderlik': 'liderlik',
+    'Önsezi': 'onsezi',
+    'Özel Yetenek': 'ozelYetenek',
+    'Pozisyon Alma': 'pozisyonAlma',
+    'Soğukkanlılık': 'sogukkanlilik',
+    'Takım Oyunu': 'takimOyunu',
+    'Topsuz Alan': 'topsuzAlan',
+    'Vizyon': 'vizyon',
+    'Çeviklik': 'ceviklik',
+    'Dayanıklılık': 'dayaniklilik',
+    'Denge': 'denge',
+    'Güç': 'guc',
+    'Hız': 'hiz',
+    'Hızlanma': 'hizlanma',
+    'Vücut Zindeliği': 'vucutZindeligi',
+    'Zıplama': 'ziplama'
+  }
+  return donusumTablosu[yetenekAdi] || yetenekAdi
+}
+
+const hesaplaMevkiGucu = (oyuncu: Oyuncu, pozisyon: string): number => {
+  const mevki = pozisyon as MevkiKodu
+  if (!oyuncu.yetenekler || !mevkiKatsayilari[mevki]) {
+    return 0
+  }
+
+  let toplamPuan = 0
+  let toplamKatsayi = 0
+
+  // Her yetenek için puan hesapla
+  for (const [yetenekAdi, yetenekPuani] of Object.entries(oyuncu.yetenekler)) {
+    // Yetenek adını küçük harfe çevir ve Türkçe karakterleri değiştir
+    const normalizeYetenekAdi = yetenekAdi.toLowerCase()
+      .replace('İ', 'i')
+      .replace('ı', 'i')
+      .replace('Ş', 's')
+      .replace('ş', 's')
+      .replace('Ğ', 'g')
+      .replace('ğ', 'g')
+      .replace('Ü', 'u')
+      .replace('ü', 'u')
+      .replace('Ö', 'o')
+      .replace('ö', 'o')
+      .replace('Ç', 'c')
+      .replace('ç', 'c')
+      .replace(/\s+/g, '') // Boşlukları kaldır
+
+    // Katsayıyı bul
+    const katsayi = mevkiKatsayilari[mevki][normalizeYetenekAdi as keyof Yetenekler] || 0
+    
+    toplamPuan += yetenekPuani * katsayi
+    toplamKatsayi += katsayi
+  }
+
+  return Math.round((toplamPuan / toplamKatsayi) * 5)
+}
+
 onMounted(() => {
   oyunculariYukle()
   pozisyonlariYukle()
@@ -869,8 +1443,14 @@ onMounted(() => {
 }
 
 .pozisyon-text {
-  color: rgba(0,0,0,0.6);
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
   font-weight: bold;
+  color: rgba(0, 0, 0, 0.8);
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
 }
 
 .formasyon-select {
@@ -934,11 +1514,10 @@ onMounted(() => {
   background-image: 
     linear-gradient(to bottom,
       #FF4500 15%, /* Turuncu - Forvet */
-      #FFD700 15%, 60%, /* Sarı - Orta Saha (3 kat daha büyük) */
+      #FFD700 15%, 60%, /* Sarı - Orta Saha */
       #0000FF 60%, 80%, /* Mavi - Defans */
       #FF0000 80% /* Kırmızı - Kaleci */
     );
-  color: white;
   position: relative;
   overflow: hidden;
 }
@@ -949,8 +1528,6 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
   padding: 8px;
 }
 
@@ -972,6 +1549,8 @@ onMounted(() => {
 .kaleci-area {
   height: 20%;
   top: 80%;
+  display: flex;
+  justify-content: center;
 }
 
 .player-card {
@@ -1096,10 +1675,9 @@ onMounted(() => {
 .position-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
+  gap: 8px;
   width: 100%;
-  height: 100%;
-  padding: 4px;
+  padding: 8px;
 }
 
 /* Orta saha için özel grid */
@@ -1119,6 +1697,7 @@ onMounted(() => {
   align-items: center;
   min-height: 85px;
   padding: 2px;
+  position: relative;
 }
 
 .empty-slot {
@@ -1129,14 +1708,19 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 20px;
   cursor: pointer;
+  position: relative;
 }
 
-.empty-slot:hover {
-  border-color: rgba(255, 255, 255, 0.8);
-  color: white;
+.empty-slot .position-text {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 16px;
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.8);
+  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
 }
 
 .oyuncu-havuzu {
