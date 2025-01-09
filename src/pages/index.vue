@@ -461,10 +461,11 @@ const seciliGruplar = ref<number[]>([])
 
 // Filtrelenmiş oyuncular
 const filtrelenmisOyuncular = computed(() => {
-  if (seciliGruplar.value.length === 0) return havuzdakiOyuncular.value
+  if (seciliGruplar.value.length === 0) return []
 
   return havuzdakiOyuncular.value.filter(oyuncu => 
-    oyuncu.gruplar?.some(grup => seciliGruplar.value.includes(grup.id))
+    oyuncu.gruplar?.some(grup => seciliGruplar.value.includes(grup.id)) &&
+    !oyuncununTakimi(oyuncu.id)
   )
 })
 
@@ -527,12 +528,18 @@ const dropOnArea = (event: DragEvent, takimKodu: 'A' | 'B', pozisyon: string, he
   // Eğer havuzdan geliyorsa
   if (!kaynakTakim) {
     oyuncu = havuzdakiOyuncular.value.find(o => o.id === Number(oyuncuId)) || null;
+    
+    // Oyuncu zaten bir takımda mı kontrol et
+    if (oyuncu && oyuncununTakimi(oyuncu.id)) {
+      showToast('Bu oyuncu zaten bir takımda!', 'error')
+      return
+    }
   } else {
     // Eğer başka bir pozisyondan geliyorsa
     const kaynakTakimObj = kaynakTakim === 'A' ? takimA : takimB;
     oyuncu = kaynakTakimObj.value.oyuncular[kaynakPozisyon!][Number(kaynakIndex)];
     
-      // Eski pozisyondan kaldır
+    // Eski pozisyondan kaldır
     if (oyuncu) {
       delete kaynakTakimObj.value.oyuncular[kaynakPozisyon!][Number(kaynakIndex)];
 
