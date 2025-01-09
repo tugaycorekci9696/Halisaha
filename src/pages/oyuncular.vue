@@ -550,7 +550,18 @@
                           </VBtn>
                           
                           <div class="yetenek-deger" :class="yetenekDegerRengi(yetenek.deger)">
-                            {{ yetenek.deger }}
+                            <VTextField
+                              v-model="yetenek.deger"
+                              type="number"
+                              min="0"
+                              max="20"
+                              density="compact"
+                              variant="plain"
+                              hide-details
+                              class="yetenek-input"
+                              style="width: 40px"
+                              @input="validateInput(yetenek)"
+                            />
                           </div>
                           
                           <VBtn
@@ -1408,6 +1419,37 @@ const siraliPozisyonlar = (pozisyonlar: { [key: string]: number }): { [key: stri
     font-size: 0.7rem;
     padding: 1px 3px;
     min-width: 28px;
+  }
+}
+
+.yetenek-input :deep(input) {
+  text-align: center;
+  padding: 0;
+  height: 40px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+.yetenek-input :deep(.v-field__field) {
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.yetenek-input :deep(.v-field__input) {
+  min-height: unset;
+  padding: 0;
+}
+
+@media (max-width: 600px) {
+  .yetenek-input :deep(input) {
+    height: 36px;
+    font-size: 1.1rem;
+  }
+  
+  .yetenek-input :deep(.v-field__field) {
+    height: 36px;
   }
 }
 </style> 

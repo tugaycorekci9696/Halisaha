@@ -68,47 +68,68 @@
       <VCol cols="12" md="8">
         <VRow>
           <VCol cols="12" md="6">
-            <VCard height="300" class="grid-card">
+            <VCard height="600" class="grid-card">
               <div class="position-area forvet-area" 
-                   @dragover.prevent
-                   @drop="dropOnArea($event, 'A', 'ST')">
+                   @dragover.prevent>
                 <div class="position-grid">
-                  <div v-for="i in 4" :key="i" class="position-slot">
+                  <div v-for="i in 4" :key="i" class="position-slot"
+                       @dragover.prevent
+                       @drop="dropOnArea($event, 'A', 'ST', i-1)">
                     <div v-if="takimA.oyuncular.ST[i-1]" 
                          class="player-card"
+                         :data-guc="getGucSeviyesi(takimA.oyuncular.ST[i-1].guc)"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', 'ST', i-1)">
-                      {{ takimA.oyuncular.ST[i-1].adSoyad }}
+                      <VAvatar size="40" class="player-avatar">
+                        <VImg v-if="takimA.oyuncular.ST[i-1].resim" :src="takimA.oyuncular.ST[i-1].resim" />
+                        <VIcon v-else icon="tabler-user" />
+                      </VAvatar>
+                      <div class="player-power">{{ takimA.oyuncular.ST[i-1].guc }}</div>
+                      <span class="player-name">{{ takimA.oyuncular.ST[i-1].adSoyad }}</span>
                     </div>
                     <div v-else class="empty-slot">+</div>
                   </div>
                 </div>
               </div>
               <div class="position-area ortasaha-area"
-                   @dragover.prevent
-                   @drop="dropOnArea($event, 'A', 'CM')">
+                   @dragover.prevent>
                 <div class="position-grid">
-                  <div v-for="i in 4" :key="i" class="position-slot">
+                  <div v-for="i in 4" :key="i" class="position-slot"
+                       @dragover.prevent
+                       @drop="dropOnArea($event, 'A', 'CM', i-1)">
                     <div v-if="takimA.oyuncular.CM[i-1]" 
                          class="player-card"
+                         :data-guc="getGucSeviyesi(takimA.oyuncular.CM[i-1].guc)"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', 'CM', i-1)">
-                      {{ takimA.oyuncular.CM[i-1].adSoyad }}
+                      <VAvatar size="40" class="player-avatar">
+                        <VImg v-if="takimA.oyuncular.CM[i-1].resim" :src="takimA.oyuncular.CM[i-1].resim" />
+                        <VIcon v-else icon="tabler-user" />
+                      </VAvatar>
+                      <div class="player-power">{{ takimA.oyuncular.CM[i-1].guc }}</div>
+                      <span class="player-name">{{ takimA.oyuncular.CM[i-1].adSoyad }}</span>
                     </div>
                     <div v-else class="empty-slot">+</div>
                   </div>
                 </div>
               </div>
               <div class="position-area defans-area"
-                   @dragover.prevent
-                   @drop="dropOnArea($event, 'A', 'DC')">
+                   @dragover.prevent>
                 <div class="position-grid">
-                  <div v-for="i in 4" :key="i" class="position-slot">
+                  <div v-for="i in 4" :key="i" class="position-slot"
+                       @dragover.prevent
+                       @drop="dropOnArea($event, 'A', 'DC', i-1)">
                     <div v-if="takimA.oyuncular.DC[i-1]" 
                          class="player-card"
+                         :data-guc="getGucSeviyesi(takimA.oyuncular.DC[i-1].guc)"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', 'DC', i-1)">
-                      {{ takimA.oyuncular.DC[i-1].adSoyad }}
+                      <VAvatar size="40" class="player-avatar">
+                        <VImg v-if="takimA.oyuncular.DC[i-1].resim" :src="takimA.oyuncular.DC[i-1].resim" />
+                        <VIcon v-else icon="tabler-user" />
+                      </VAvatar>
+                      <div class="player-power">{{ takimA.oyuncular.DC[i-1].guc }}</div>
+                      <span class="player-name">{{ takimA.oyuncular.DC[i-1].adSoyad }}</span>
                     </div>
                     <div v-else class="empty-slot">+</div>
                   </div>
@@ -116,61 +137,88 @@
               </div>
               <div class="position-area kaleci-area"
                    @dragover.prevent
-                   @drop="dropOnArea($event, 'A', 'GK')">
+                   @drop="dropOnArea($event, 'A', 'GK', 0)">
                 <!-- Kaleci -->
                 <div v-for="(oyuncu, index) in takimA.oyuncular.GK" 
                      :key="index"
                      class="player-card"
+                     :data-guc="getGucSeviyesi(oyuncu.guc)"
                      draggable="true"
                      @dragstart="dragStartPozisyon($event, 'A', 'GK', index)">
-                  {{ oyuncu.adSoyad }}
+                  <VAvatar size="40" class="player-avatar">
+                    <VImg v-if="oyuncu.resim" :src="oyuncu.resim" />
+                    <VIcon v-else icon="tabler-user" />
+                  </VAvatar>
+                  <div class="player-power">{{ oyuncu.guc }}</div>
+                  <span class="player-name">{{ oyuncu.adSoyad }}</span>
                 </div>
               </div>
             </VCard>
           </VCol>
           <VCol cols="12" md="6">
-            <VCard height="300" class="grid-card">
+            <VCard height="600" class="grid-card">
               <!-- B Takımı için aynı yapı -->
               <div class="position-area forvet-area"
-                   @dragover.prevent
-                   @drop="dropOnArea($event, 'B', 'ST')">
+                   @dragover.prevent>
                 <div class="position-grid">
-                  <div v-for="i in 4" :key="i" class="position-slot">
+                  <div v-for="i in 4" :key="i" class="position-slot"
+                       @dragover.prevent
+                       @drop="dropOnArea($event, 'B', 'ST', i-1)">
                     <div v-if="takimB.oyuncular.ST[i-1]" 
                          class="player-card"
+                         :data-guc="getGucSeviyesi(takimB.oyuncular.ST[i-1].guc)"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'B', 'ST', i-1)">
-                      {{ takimB.oyuncular.ST[i-1].adSoyad }}
+                      <VAvatar size="40" class="player-avatar">
+                        <VImg v-if="takimB.oyuncular.ST[i-1].resim" :src="takimB.oyuncular.ST[i-1].resim" />
+                        <VIcon v-else icon="tabler-user" />
+                      </VAvatar>
+                      <div class="player-power">{{ takimB.oyuncular.ST[i-1].guc }}</div>
+                      <span class="player-name">{{ takimB.oyuncular.ST[i-1].adSoyad }}</span>
                     </div>
                     <div v-else class="empty-slot">+</div>
                   </div>
                 </div>
               </div>
               <div class="position-area ortasaha-area"
-                   @dragover.prevent
-                   @drop="dropOnArea($event, 'B', 'CM')">
+                   @dragover.prevent>
                 <div class="position-grid">
-                  <div v-for="i in 4" :key="i" class="position-slot">
+                  <div v-for="i in 4" :key="i" class="position-slot"
+                       @dragover.prevent
+                       @drop="dropOnArea($event, 'B', 'CM', i-1)">
                     <div v-if="takimB.oyuncular.CM[i-1]" 
                          class="player-card"
+                         :data-guc="getGucSeviyesi(takimB.oyuncular.CM[i-1].guc)"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'B', 'CM', i-1)">
-                      {{ takimB.oyuncular.CM[i-1].adSoyad }}
+                      <VAvatar size="40" class="player-avatar">
+                        <VImg v-if="takimB.oyuncular.CM[i-1].resim" :src="takimB.oyuncular.CM[i-1].resim" />
+                        <VIcon v-else icon="tabler-user" />
+                      </VAvatar>
+                      <div class="player-power">{{ takimB.oyuncular.CM[i-1].guc }}</div>
+                      <span class="player-name">{{ takimB.oyuncular.CM[i-1].adSoyad }}</span>
                     </div>
                     <div v-else class="empty-slot">+</div>
                   </div>
                 </div>
               </div>
               <div class="position-area defans-area"
-                   @dragover.prevent
-                   @drop="dropOnArea($event, 'B', 'DC')">
+                   @dragover.prevent>
                 <div class="position-grid">
-                  <div v-for="i in 4" :key="i" class="position-slot">
+                  <div v-for="i in 4" :key="i" class="position-slot"
+                       @dragover.prevent
+                       @drop="dropOnArea($event, 'B', 'DC', i-1)">
                     <div v-if="takimB.oyuncular.DC[i-1]" 
                          class="player-card"
+                         :data-guc="getGucSeviyesi(takimB.oyuncular.DC[i-1].guc)"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'B', 'DC', i-1)">
-                      {{ takimB.oyuncular.DC[i-1].adSoyad }}
+                      <VAvatar size="40" class="player-avatar">
+                        <VImg v-if="takimB.oyuncular.DC[i-1].resim" :src="takimB.oyuncular.DC[i-1].resim" />
+                        <VIcon v-else icon="tabler-user" />
+                      </VAvatar>
+                      <div class="player-power">{{ takimB.oyuncular.DC[i-1].guc }}</div>
+                      <span class="player-name">{{ takimB.oyuncular.DC[i-1].adSoyad }}</span>
                     </div>
                     <div v-else class="empty-slot">+</div>
                   </div>
@@ -178,14 +226,20 @@
               </div>
               <div class="position-area kaleci-area"
                    @dragover.prevent
-                   @drop="dropOnArea($event, 'B', 'GK')">
+                   @drop="dropOnArea($event, 'B', 'GK', 0)">
                 <!-- Kaleci -->
                 <div v-for="(oyuncu, index) in takimB.oyuncular.GK" 
                      :key="index"
                      class="player-card"
+                     :data-guc="getGucSeviyesi(oyuncu.guc)"
                      draggable="true"
                      @dragstart="dragStartPozisyon($event, 'B', 'GK', index)">
-                  {{ oyuncu.adSoyad }}
+                  <VAvatar size="40" class="player-avatar">
+                    <VImg v-if="oyuncu.resim" :src="oyuncu.resim" />
+                    <VIcon v-else icon="tabler-user" />
+                  </VAvatar>
+                  <div class="player-power">{{ oyuncu.guc }}</div>
+                  <span class="player-name">{{ oyuncu.adSoyad }}</span>
                 </div>
               </div>
             </VCard>
@@ -410,47 +464,46 @@ const dragStartPozisyon = (event: DragEvent, takimKodu: 'A' | 'B', pozisyon: str
   event.dataTransfer?.setData('kaynakIndex', index.toString())
 }
 
-const dropOnPozisyon = (event: DragEvent, takimKodu: 'A' | 'B', pozisyon: string, index: number) => {
-  event.preventDefault()
-  const oyuncuId = event.dataTransfer?.getData('oyuncuId')
-  const kaynakTakim = event.dataTransfer?.getData('kaynakTakim') as 'A' | 'B'
-  const kaynakPozisyon = event.dataTransfer?.getData('kaynakPozisyon')
-  const kaynakIndex = event.dataTransfer?.getData('kaynakIndex')
+const dropOnArea = (event: DragEvent, takimKodu: 'A' | 'B', pozisyon: string, hedefIndex: number) => {
+  event.preventDefault();
+  const oyuncuId = event.dataTransfer?.getData('oyuncuId');
+  const kaynakTakim = event.dataTransfer?.getData('kaynakTakim') as 'A' | 'B';
+  const kaynakPozisyon = event.dataTransfer?.getData('kaynakPozisyon');
+  const kaynakIndex = event.dataTransfer?.getData('kaynakIndex');
 
-  if (!oyuncuId) return
+  if (!oyuncuId) return;
 
-  let oyuncu: Oyuncu | null = null
-  let hedefOyuncu: Oyuncu | null = null
+  let oyuncu: Oyuncu | null = null;
+  let hedefOyuncu: Oyuncu | null = null;
 
-  // Hedef pozisyondaki oyuncuyu al
-  hedefOyuncu = getPozisyonOyuncu(takimKodu, pozisyon, index)
+  const hedefTakim = takimKodu === 'A' ? takimA : takimB;
+  
+  // Hedef pozisyondaki mevcut oyuncuyu al
+  hedefOyuncu = hedefTakim.value.oyuncular[pozisyon][hedefIndex];
 
   // Eğer havuzdan geliyorsa
   if (!kaynakTakim) {
-    oyuncu = havuzdakiOyuncular.value.find(o => o.id === Number(oyuncuId)) || null
+    oyuncu = havuzdakiOyuncular.value.find(o => o.id === Number(oyuncuId)) || null;
   } else {
     // Eğer başka bir pozisyondan geliyorsa
-    oyuncu = getPozisyonOyuncu(kaynakTakim, kaynakPozisyon!, Number(kaynakIndex))
-    if (oyuncu) {
+    const kaynakTakimObj = kaynakTakim === 'A' ? takimA : takimB;
+    oyuncu = kaynakTakimObj.value.oyuncular[kaynakPozisyon!][Number(kaynakIndex)];
+    
       // Eski pozisyondan kaldır
-      const eskiTakim = kaynakTakim === 'A' ? takimA : takimB
-      delete eskiTakim.value.oyuncular[kaynakPozisyon!][Number(kaynakIndex)]
+    if (oyuncu) {
+      delete kaynakTakimObj.value.oyuncular[kaynakPozisyon!][Number(kaynakIndex)];
 
       // Eğer hedef pozisyonda oyuncu varsa, eski pozisyona taşı
       if (hedefOyuncu) {
-        eskiTakim.value.oyuncular[kaynakPozisyon!][Number(kaynakIndex)] = hedefOyuncu
+        kaynakTakimObj.value.oyuncular[kaynakPozisyon!][Number(kaynakIndex)] = hedefOyuncu;
       }
     }
   }
 
-  if (!oyuncu) return
+  if (!oyuncu) return;
 
-  // Yeni pozisyona yerleştir
-  const takim = kaynakTakim === 'A' ? takimA : takimB
-  takim.value.oyuncular[pozisyon] = {
-    ...takim.value.oyuncular[pozisyon],
-    [index]: oyuncu
-  }
+  // Yeni pozisyona ekle
+  hedefTakim.value.oyuncular[pozisyon][hedefIndex] = oyuncu;
 }
 
 const dropOnSaha = (event: DragEvent, takimKodu: 'A' | 'B') => {
@@ -725,37 +778,12 @@ const showToast = (message: string, color: 'success' | 'error' | 'warning' = 'su
   }
 }
 
-const dropOnArea = (event: DragEvent, takimKodu: 'A' | 'B', pozisyon: string) => {
-  event.preventDefault();
-  const oyuncuId = event.dataTransfer?.getData('oyuncuId');
-  const kaynakTakim = event.dataTransfer?.getData('kaynakTakim') as 'A' | 'B';
-  const kaynakPozisyon = event.dataTransfer?.getData('kaynakPozisyon');
-  const kaynakIndex = event.dataTransfer?.getData('kaynakIndex');
-
-  if (!oyuncuId) return;
-
-  let oyuncu: Oyuncu | null = null;
-
-  // Eğer havuzdan geliyorsa
-  if (!kaynakTakim) {
-    oyuncu = havuzdakiOyuncular.value.find(o => o.id === Number(oyuncuId)) || null;
-  } else {
-    // Eğer başka bir pozisyondan geliyorsa
-    const kaynakTakimObj = kaynakTakim === 'A' ? takimA : takimB;
-    oyuncu = kaynakTakimObj.value.oyuncular[kaynakPozisyon!][Number(kaynakIndex)];
-    
-    // Eski pozisyondan kaldır
-    if (oyuncu) {
-      delete kaynakTakimObj.value.oyuncular[kaynakPozisyon!][Number(kaynakIndex)];
-    }
-  }
-
-  if (!oyuncu) return;
-
-  // Yeni pozisyona ekle
-  const hedefTakim = takimKodu === 'A' ? takimA : takimB;
-  const yeniIndex = Object.keys(hedefTakim.value.oyuncular[pozisyon]).length;
-  hedefTakim.value.oyuncular[pozisyon][yeniIndex] = oyuncu;
+const getGucSeviyesi = (guc?: number) => {
+  if (!guc) return 'dusuk'
+  if (guc < 65) return 'dusuk'
+  if (guc < 75) return 'orta'
+  if (guc < 85) return 'iyi'
+  return 'mukemmel'
 }
 
 onMounted(() => {
@@ -922,10 +950,10 @@ onMounted(() => {
 .grid-card {
   background-image: 
     linear-gradient(to bottom,
-      #FF4500 20%, /* Turuncu - Forvet */
-      #FFD700 20%, 65%, /* Sarı - Orta Saha */
-      #0000FF 65%, 85%, /* Mavi - Defans */
-      #FF0000 85% /* Kırmızı - Kaleci */
+      #FF4500 15%, /* Turuncu - Forvet */
+      #FFD700 15%, 60%, /* Sarı - Orta Saha (3 kat daha büyük) */
+      #0000FF 60%, 80%, /* Mavi - Defans */
+      #FF0000 80% /* Kırmızı - Kaleci */
     );
   color: white;
   position: relative;
@@ -944,41 +972,142 @@ onMounted(() => {
 }
 
 .forvet-area {
-  height: 20%;
+  height: 15%;
   top: 0;
 }
 
 .ortasaha-area {
   height: 45%;
-  top: 20%;
+  top: 15%;
 }
 
 .defans-area {
   height: 20%;
-  top: 65%;
+  top: 60%;
 }
 
 .kaleci-area {
-  height: 15%;
-  top: 85%;
+  height: 20%;
+  top: 80%;
 }
 
 .player-card {
-  background: rgba(255, 255, 255, 0.9);
-  color: #000;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  cursor: move;
   width: 100%;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-  text-align: center;
+  max-width: 70px;
+  min-height: 85px;
+  position: relative;
+  cursor: move;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
 }
 
-.player-card:hover {
-  background: rgba(255, 255, 255, 1);
+.player-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 65px;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  clip-path: polygon(
+    /* Sol Kol */
+    0 20%,        /* Sol omuz başlangıç */
+    20% 20%,      /* Sol omuz iç */
+    /* Yaka */
+    33% 0,        /* Sol yaka */
+    50% 15%,      /* Yaka V noktası */
+    67% 0,        /* Sağ yaka */
+    /* Sağ Kol */
+    80% 20%,      /* Sağ omuz iç */
+    100% 20%,     /* Sağ omuz başlangıç */
+    100% 45%,     /* Sağ kol uç */
+    85% 45%,      /* Sağ kol iç */
+    /* Gövde */
+    85% 100%,     /* Sağ alt */
+    15% 100%,     /* Sol alt */
+    /* Sol Kol devamı */
+    15% 45%,      /* Sol kol iç */
+    0 45%         /* Sol kol uç */
+  );
+  z-index: -1;
+}
+
+.player-power {
+  position: absolute;
+  top: 0;
+  right: -5px;
+  transform: none;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: white;
+  z-index: 2;
+  padding: 2px 6px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Güç seviyelerine göre renkler */
+.player-card[data-guc="dusuk"] .player-power {
+  background: #dc3545; /* Kırmızı */
+  border: 2px solid #dc3545;
+}
+
+.player-card[data-guc="orta"] .player-power {
+  background: #ffc107; /* Sarı */
+  border: 2px solid #ffc107;
+  color: #333; /* Sarı arka plan için koyu yazı */
+}
+
+.player-card[data-guc="iyi"] .player-power {
+  background: #28a745; /* Yeşil */
+  border: 2px solid #28a745;
+}
+
+.player-card[data-guc="mukemmel"] .player-power {
+  background: #0a4b9e; /* Koyu Mavi */
+  border: 2px solid #0a4b9e;
+}
+
+.player-avatar {
+  width: 35px !important;
+  height: 35px !important;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  z-index: 1;
+  margin-top: 8px;
+}
+
+.player-name {
+  position: absolute;
+  top: 55%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.7rem;
+  line-height: 1;
+  font-weight: bold;
+  color: #333;
+  text-shadow: none;
+  text-align: center;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.player-card:hover::before {
+  filter: brightness(0.98);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .position-grid {
@@ -995,14 +1124,15 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 40px;
+  min-height: 85px;
+  padding: 2px;
 }
 
 .empty-slot {
-  width: 40px;
-  height: 40px;
+  width: 35px;
+  height: 35px;
   border: 2px dashed rgba(255, 255, 255, 0.5);
-  border-radius: 4px;
+  border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
