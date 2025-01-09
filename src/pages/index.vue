@@ -94,7 +94,7 @@
               <div class="position-area ortasaha-area"
                    @dragover.prevent>
                 <div class="position-grid">
-                  <div v-for="i in 4" :key="i" class="position-slot"
+                  <div v-for="i in 12" :key="i" class="position-slot"
                        @dragover.prevent
                        @drop="dropOnArea($event, 'A', 'CM', i-1)">
                     <div v-if="takimA.oyuncular.CM[i-1]" 
@@ -183,7 +183,7 @@
               <div class="position-area ortasaha-area"
                    @dragover.prevent>
                 <div class="position-grid">
-                  <div v-for="i in 4" :key="i" class="position-slot"
+                  <div v-for="i in 12" :key="i" class="position-slot"
                        @dragover.prevent
                        @drop="dropOnArea($event, 'B', 'CM', i-1)">
                     <div v-if="takimB.oyuncular.CM[i-1]" 
@@ -1113,11 +1113,21 @@ onMounted(() => {
 .position-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: 1fr;
   gap: 4px;
   width: 100%;
   height: 100%;
   padding: 4px;
+}
+
+/* Orta saha için özel grid */
+.ortasaha-area .position-grid {
+  grid-template-rows: repeat(3, 1fr);
+}
+
+/* Diğer alanlar için tek satır */
+.forvet-area .position-grid,
+.defans-area .position-grid {
+  grid-template-rows: 1fr;
 }
 
 .position-slot {

@@ -799,14 +799,21 @@ const hesaplaCanlıGuc = () => {
   if (!secilenOyuncu.value) return
 
   const yeteneklerObj: { [key: string]: number } = {}
-  ;[...teknikYetenekler.value, ...mentalYetenekler.value, ...fizikselYetenekler.value].forEach(yetenek => {
-    yeteneklerObj[yetenek.ad] = Number(yetenek.deger)
+  const tumYetenekler = [...teknikYetenekler.value, ...mentalYetenekler.value, ...fizikselYetenekler.value]
+  
+  let toplamPuan = 0
+  tumYetenekler.forEach(yetenek => {
+    toplamPuan += Number(yetenek.deger)
   })
 
-  canliGuc.value = hesaplaOyuncuGucu(yeteneklerObj, secilenOyuncu.value.pozisyonlar || {
-    ST: 1, OOS: 1, RW: 1, LW: 1, CM: 1,
-    DM: 1, DC: 1, DR: 1, DL: 1, GK: 1
-  })
+  // Ortalama hesapla ve 5 ile çarp
+  const ortalamaGuc = (toplamPuan / tumYetenekler.length) * 5
+
+  // En yakın tam sayıya yuvarla
+  canliGuc.value = Math.round(ortalamaGuc)
+
+  // Güç değerini 1-99 aralığında tut
+  canliGuc.value = Math.min(99, Math.max(1, canliGuc.value))
 }
 
 // Yetenek değiştiğinde güç hesapla
@@ -835,8 +842,7 @@ const yetenekleriDuzenle = (oyuncu: Oyuncu) => {
   })
   
   yeteneklerDialog.value = true
-  // Veritabanından gelen güç değerini kullan
-  canliGuc.value = oyuncu.guc || 0
+  hesaplaCanlıGuc() // Güç değerini hesapla
 }
 
 const kaydetOyuncu = async () => {
@@ -1217,18 +1223,18 @@ const siraliPozisyonlar = (pozisyonlar: { [key: string]: number }): { [key: stri
   border-radius: 4px;
   margin-bottom: 8px;
   transition: background-color 0.2s;
-  background-color: white;
-  color: black;
+  background-color: rgb(var(--v-theme-surface));
+  color: rgb(var(--v-theme-on-surface));
 }
 
 .yetenek-container:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: rgb(var(--v-theme-surface-variant));
 }
 
 .yetenek-label {
   font-size: 1rem;
   font-weight: 500;
-  color: black;
+  color: rgb(var(--v-theme-on-surface));
   flex: 1;
 }
 
@@ -1242,8 +1248,6 @@ const siraliPozisyonlar = (pozisyonlar: { [key: string]: number }): { [key: stri
   font-weight: 600;
   border-radius: 4px;
   margin: 0 8px;
-  background-color: #f5f5f5;
-  border: 1px solid #e0e0e0;
 }
 
 .yetenek-btn {
@@ -1257,21 +1261,57 @@ const siraliPozisyonlar = (pozisyonlar: { [key: string]: number }): { [key: stri
 }
 
 .success-value {
-  color: #2E7D32 !important;
-  background-color: #E8F5E9 !important;
-  border-color: #A5D6A7 !important;
+  color: rgb(var(--v-theme-on-success)) !important;
+  background-color: rgb(var(--v-theme-success)) !important;
 }
 
 .warning-value {
-  color: #F57C00 !important;
-  background-color: #FFF3E0 !important;
-  border-color: #FFCC80 !important;
+  color: rgb(var(--v-theme-on-warning)) !important;
+  background-color: rgb(var(--v-theme-warning)) !important;
 }
 
 .error-value {
-  color: #C62828 !important;
-  background-color: #FFEBEE !important;
-  border-color: #EF9A9A !important;
+  color: rgb(var(--v-theme-on-error)) !important;
+  background-color: rgb(var(--v-theme-error)) !important;
+}
+
+.yetenek-input :deep(input) {
+  text-align: center;
+  padding: 0;
+  height: 40px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: inherit;
+  background: transparent;
+}
+
+.yetenek-input :deep(.v-field__field) {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  background: transparent;
+}
+
+.yetenek-input :deep(.v-field__input) {
+  min-height: unset;
+  padding: 0;
+  color: inherit;
+}
+
+.yetenek-input :deep(.v-field) {
+  background-color: transparent !important;
+  color: inherit;
+}
+
+@media (max-width: 600px) {
+  .yetenek-input :deep(input) {
+    height: 36px;
+    font-size: 1.1rem;
+  }
+  
+  .yetenek-input :deep(.v-field__field) {
+    height: 36px;
+  }
 }
 
 /* Responsive styles */
@@ -1419,37 +1459,6 @@ const siraliPozisyonlar = (pozisyonlar: { [key: string]: number }): { [key: stri
     font-size: 0.7rem;
     padding: 1px 3px;
     min-width: 28px;
-  }
-}
-
-.yetenek-input :deep(input) {
-  text-align: center;
-  padding: 0;
-  height: 40px;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: inherit;
-}
-
-.yetenek-input :deep(.v-field__field) {
-  height: 40px;
-  display: flex;
-  align-items: center;
-}
-
-.yetenek-input :deep(.v-field__input) {
-  min-height: unset;
-  padding: 0;
-}
-
-@media (max-width: 600px) {
-  .yetenek-input :deep(input) {
-    height: 36px;
-    font-size: 1.1rem;
-  }
-  
-  .yetenek-input :deep(.v-field__field) {
-    height: 36px;
   }
 }
 </style> 
