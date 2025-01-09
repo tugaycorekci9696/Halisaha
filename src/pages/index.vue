@@ -4,8 +4,7 @@
       <!-- Oyuncu Havuzu -->
       <VCol cols="12" md="4">
         <VCard>
-          <VCardTitle class="d-flex align-center justify-space-between">
-            <div class="d-flex gap-2">
+          <VCardTitle class="d-flex flex-wrap align-center gap-2">
               <VBtn
                 color="error"
                 size="small"
@@ -14,28 +13,20 @@
               >
                 Sıfırla
               </VBtn>
-              <VBtn
-                color="primary"
-                size="small"
-                prepend-icon="tabler-users"
-                @click="grupDialog = true"
-              >
-                Gruplar
-              </VBtn>
-              <VSelect
-                v-model="seciliGruplar"
-                :items="gruplar"
-                item-title="isim"
-                item-value="id"
-                label="Gruplar"
-                multiple
-                chips
-                variant="outlined"
-                density="compact"
-                hide-details
-                class="min-w-[200px]"
-              />
-            </div>
+            <VSelect
+              v-model="seciliGruplar"
+              :items="gruplar"
+              item-title="isim"
+              item-value="id"
+              :label="seciliGruplar.length > 0 ? seciliGruplarText : 'Gruplar'"
+              multiple
+              chips
+              variant="outlined"
+              density="compact"
+              hide-details
+              class="flex-grow-1"
+              placeholder="Grup seçiniz..."
+            />
           </VCardTitle>
           <VCardText>
             <div v-if="havuzdakiOyuncular.length === 0" class="text-center pa-4">
@@ -47,9 +38,9 @@
                 <div class="oyuncu-listesi">
                   <div
                     v-for="oyuncu in filtrelenmisOyuncular"
-                    :key="oyuncu.id"
+                   :key="oyuncu.id"
                     class="oyuncu-karti"
-                    draggable="true"
+                   draggable="true"
                     @dragstart="dragStart($event, oyuncu)"
                   >
                     <div class="oyuncu-resim">
@@ -59,8 +50,8 @@
                           :src="oyuncu.resim"
                           alt="Oyuncu resmi"
                         />
-                        <VIcon v-else icon="tabler-user" />
-                      </VAvatar>
+                    <VIcon v-else icon="tabler-user" />
+                  </VAvatar>
                     </div>
                     <div class="oyuncu-bilgi">
                       <div class="oyuncu-adi">{{ oyuncu.adSoyad }}</div>
@@ -70,19 +61,19 @@
                             <div v-if="Number(seviye) >= 3"
                                  :class="['position-mini-box', `level-${seviye}`]"
                                  :title="getPozisyonAciklama(String(poz), Number(seviye))">
-                              {{ poz }}
-                            </div>
+                          {{ poz }}
+                        </div>
                           </template>
-                        </template>
-                      </div>
+                      </template>
                     </div>
+                  </div>
                     <div class="oyuncu-guc">
                       <VChip
                         :color="oyuncuGucRengi(oyuncu.guc)"
                         class="font-weight-bold"
                       >
                         {{ oyuncu.guc || '-' }}
-                      </VChip>
+                  </VChip>
                     </div>
                   </div>
                 </div>
@@ -303,10 +294,10 @@
         <VCardText>
           <VForm @submit.prevent="yeniGrupEkle" class="mb-4">
             <div class="d-flex gap-2">
-              <VTextField
+          <VTextField
                 v-model="yeniGrup.isim"
                 label="Yeni Grup İsmi"
-                variant="outlined"
+            variant="outlined"
                 density="compact"
                 hide-details
               />
@@ -317,7 +308,7 @@
               >
                 Ekle
               </VBtn>
-            </div>
+          </div>
           </VForm>
 
           <VList lines="two">
@@ -333,11 +324,11 @@
               <VListItemTitle>
                 <div class="d-flex align-center justify-space-between">
                   <div v-if="!grup.duzenleniyor">{{ grup.isim }}</div>
-                  <VTextField
+              <VTextField
                     v-else
                     v-model="grup.yeniIsim"
-                    variant="outlined"
-                    density="compact"
+                variant="outlined"
+                density="compact"
                     hide-details
                     autofocus
                     @keyup.enter="grupIsmiKaydet(grup)"
@@ -357,9 +348,9 @@
                       color="error"
                       variant="text"
                       @click="grupSil(grup.id)"
-                    />
-                  </div>
-                </div>
+              />
+            </div>
+            </div>
               </VListItemTitle>
               
               <VListItemSubtitle>
@@ -370,8 +361,8 @@
         </VCardText>
         <VCardActions>
           <VSpacer />
-          <VBtn
-            color="primary"
+          <VBtn 
+            color="primary" 
             @click="grupDialog = false"
           >
             Kapat
@@ -539,7 +530,7 @@ const dropOnArea = (event: DragEvent, takimKodu: 'A' | 'B', pozisyon: string, he
     const kaynakTakimObj = kaynakTakim === 'A' ? takimA : takimB;
     oyuncu = kaynakTakimObj.value.oyuncular[kaynakPozisyon!][Number(kaynakIndex)];
     
-    // Eski pozisyondan kaldır
+      // Eski pozisyondan kaldır
     if (oyuncu) {
       delete kaynakTakimObj.value.oyuncular[kaynakPozisyon!][Number(kaynakIndex)];
 
@@ -769,6 +760,14 @@ const grupSil = async (grupId: number) => {
     showToast('Grup silinirken bir hata oluştu', 'error')
   }
 }
+
+// Script kısmına computed property ekle
+const seciliGruplarText = computed(() => {
+  return gruplar.value
+    .filter(grup => seciliGruplar.value.includes(grup.id))
+    .map(grup => grup.isim)
+    .join(', ')
+})
 
 onMounted(() => {
   oyunculariYukle()
