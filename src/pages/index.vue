@@ -1340,7 +1340,33 @@ const hesaplaMevkiGucu = (oyuncu: Oyuncu, pozisyon: string): number => {
     toplamKatsayi += katsayi
   }
 
-  return Math.round((toplamPuan / toplamKatsayi) * 5)
+  // Temel gücü hesapla
+  const temelGuc = Math.round((toplamPuan / toplamKatsayi) * 5)
+
+  // Oyuncunun bu pozisyondaki seviyesini bul
+  const pozisyonSeviyesi = oyuncu.pozisyonlar?.[mevki] || 1
+
+  // Seviyeye göre çarpanı belirle
+  let seviyeCarpani = 0.3 // Varsayılan olarak en düşük (seçilmemiş pozisyon)
+  switch (pozisyonSeviyesi) {
+    case 5: // Açık yeşil
+      seviyeCarpani = 1
+      break
+    case 4: // Koyu yeşil
+      seviyeCarpani = 0.9
+      break
+    case 3: // Turuncu
+      seviyeCarpani = 0.7
+      break
+    case 2: // Sarı
+      seviyeCarpani = 0.5
+      break
+    default: // Seçilmemiş veya seviye 1
+      seviyeCarpani = 0.3
+  }
+
+  // Final gücünü hesapla
+  return Math.round(temelGuc * seviyeCarpani)
 }
 
 onMounted(() => {
