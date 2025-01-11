@@ -1,0 +1,1027 @@
+<template>
+  <div>
+    <VCard title="Oyuncular 👥">
+      <VCardText>
+        <div class="d-flex gap-4 mb-4">
+        <VBtn
+          color="success"
+          @click="yeniOyuncuEkle"
+        >
+          Yeni Oyuncu Ekle
+        </VBtn>
+          <VBtn
+            color="primary"
+            @click="grupDialog = true"
+          >
+            Grup Yönetimi
+          </VBtn>
+        </div>
+
+        <VTable class="oyuncular-table">
+          <thead>
+            <tr>
+              <th class="d-none d-sm-table-cell">Fotoğraf</th>
+              <th>Adı Soyadı</th>
+              <th>Pozisyonlar</th>
+              <th>Güç</th>
+              <th>Gruplar</th>
+              <th>İşlemler</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="oyuncu in havuzdakiOyuncular" :key="oyuncu.id">
+              <td class="d-none d-sm-table-cell">
+                <VAvatar size="40">
+                  <VImg
+                    v-if="oyuncu.resim"
+                    :src="oyuncu.resim"
+                    alt="Oyuncu resmi"
+                  />
+                  <VIcon v-else icon="tabler-user" />
+                </VAvatar>
+              </td>
+              <td>
+                <div class="d-flex align-center">
+                  <VAvatar size="32" class="d-sm-none me-2">
+                    <VImg
+                      v-if="oyuncu.resim"
+                      :src="oyuncu.resim"
+                      alt="Oyuncu resmi"
+                    />
+                    <VIcon v-else icon="tabler-user" />
+                  </VAvatar>
+                  {{ oyuncu.adSoyad }}
+                </div>
+              </td>
+              <td>
+                <div class="positions-preview">
+                  <template v-if="oyuncu.pozisyonlar">
+                    <template v-for="(seviye, poz) in siraliPozisyonlar(oyuncu.pozisyonlar)" :key="poz">
+                      <div v-if="Number(seviye) >= 3"
+                           :class="['position-mini-box', `level-${seviye}`]"
+                           :title="getPozisyonAciklama(String(poz), Number(seviye))">
+                        {{ poz }}
+                      </div>
+                    </template>
+                  </template>
+                </div>
+              </td>
+              <td>
+                <VChip
+                  :color="oyuncuGucRengi(oyuncu.guc)"
+                  class="font-weight-bold"
+                >
+                  {{ oyuncu.guc || '-' }}
+                </VChip>
+              </td>
+              <td>
+                <div class="d-flex gap-1 flex-wrap">
+                  <VChip
+                    v-for="grup in oyuncu.gruplar"
+                    :key="grup.id"
+                    size="small"
+                    color="info"
+                    class="mr-1"
+                  >
+                    {{ grup.isim }}
+                  </VChip>
+                </div>
+              </td>
+              <td>
+                <div class="d-flex flex-wrap gap-2">
+                  <VBtn
+                    size="small"
+                    color="primary"
+                    class="flex-grow-0"
+                    @click="duzenleOyuncu(oyuncu)"
+                  >
+                    <VIcon size="small" icon="tabler-edit" class="d-sm-none" />
+                    <span class="d-none d-sm-block">Düzenle</span>
+                  </VBtn>
+                  <VBtn
+                    size="small"
+                    color="info"
+                    class="flex-grow-0"
+                    @click="oyuncuGruplariDuzenle(oyuncu)"
+                  >
+                    <VIcon size="small" icon="tabler-users" class="d-sm-none" />
+                    <span class="d-none d-sm-block">Gruplar</span>
+                  </VBtn>
+                  <VBtn
+                    size="small"
+                    color="warning"
+                    class="flex-grow-0"
+                    @click="oyuncuYetenekleriDuzenle(oyuncu)"
+                  >
+                    <VIcon size="small" icon="tabler-award" class="d-sm-none" />
+                    <span class="d-none d-sm-block">Yetenekler</span>
+                  </VBtn>
+                  <VBtn
+                    size="small"
+                    color="error"
+                    class="flex-grow-0"
+                    @click="silOyuncu(oyuncu.id)"
+                  >
+                    <VIcon size="small" icon="tabler-trash" class="d-sm-none" />
+                    <span class="d-none d-sm-block">Sil</span>
+                  </VBtn>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </VTable>
+      </VCardText>
+    </VCard>
+
+    <!-- Grup Yönetimi Dialog -->
+    <VDialog v-model="grupDialog" max-width="500">
+          <VCard>
+        <VCardTitle>Grup Yönetimi</VCardTitle>
+        <VCardText>
+          <VForm @submit.prevent="yeniGrupEkle" class="mb-4">
+            <div class="d-flex gap-2">
+              <VTextField
+                v-model="yeniGrup.isim"
+                label="Yeni Grup İsmi"
+                variant="outlined"
+                density="compact"
+                hide-details
+              />
+                    <VBtn
+                color="success"
+                type="submit"
+                :disabled="!yeniGrup.isim"
+              >
+                Ekle
+                    </VBtn>
+                  </div>
+          </VForm>
+
+          <VList lines="two">
+            <VListItem
+              v-for="grup in gruplar"
+              :key="grup.id"
+              :value="grup.id"
+            >
+              <template v-slot:prepend>
+                <VIcon icon="tabler-users" />
+              </template>
+              
+              <VListItemTitle>
+                <div class="d-flex align-center justify-space-between">
+                  <div v-if="!grup.duzenleniyor">{{ grup.isim }}</div>
+                <VTextField
+                    v-else
+                    v-model="grup.yeniIsim"
+                  variant="outlined"
+                    density="compact"
+                    hide-details
+                    autofocus
+                    @keyup.enter="grupIsmiKaydet(grup)"
+                    @blur="grupIsmiKaydet(grup)"
+                  />
+                  <div class="d-flex gap-2">
+                    <VBtn
+                      v-if="!grup.duzenleniyor"
+                      icon="tabler-edit"
+                      size="small"
+                      variant="text"
+                      @click="grupDuzenle(grup)"
+                    />
+                    <VBtn
+                      icon="tabler-trash"
+                      size="small"
+                      color="error"
+                      variant="text"
+                      @click="grupSil(grup.id)"
+                    />
+                      </div>
+                    </div>
+              </VListItemTitle>
+              
+              <VListItemSubtitle>
+                {{ grup.oyuncuSayisi }} oyuncu
+              </VListItemSubtitle>
+            </VListItem>
+          </VList>
+            </VCardText>
+        <VCardActions>
+              <VSpacer />
+              <VBtn
+            color="primary"
+            @click="grupDialog = false"
+          >
+            Kapat
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- Oyuncu Grupları Dialog -->
+    <VDialog v-model="oyuncuGruplariDialog.show" max-width="500">
+      <VCard>
+        <VCardTitle>{{ oyuncuGruplariDialog.oyuncu?.adSoyad }} - Gruplar</VCardTitle>
+        <VCardText>
+          <VSelect
+            v-model="oyuncuGruplariDialog.seciliGruplar"
+            :items="gruplar"
+            item-title="isim"
+            item-value="id"
+            label="Gruplar"
+            multiple
+            chips
+                variant="outlined"
+          />
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+          <VBtn
+            color="error"
+            variant="text"
+            @click="oyuncuGruplariDialog.show = false"
+              >
+                İptal
+              </VBtn>
+              <VBtn
+            color="primary"
+            @click="oyuncuGruplariKaydet"
+              >
+                Kaydet
+              </VBtn>
+            </VCardActions>
+          </VCard>
+        </VDialog>
+
+    <!-- Oyuncu Form Dialog -->
+    <VDialog v-model="oyuncuFormDialog.show" max-width="600">
+      <VCard>
+        <VCardTitle>{{ oyuncuFormDialog.isEdit ? 'Oyuncu Düzenle' : 'Yeni Oyuncu Ekle' }}</VCardTitle>
+        <VCardText>
+          <VForm ref="oyuncuForm" @submit.prevent="kaydetOyuncu" class="d-flex flex-column gap-4">
+            <!-- Resim Yükleme ve Kırpma -->
+            <div class="image-upload-container">
+              <div v-if="!oyuncuFormDialog.cropperVisible" class="upload-preview">
+                <VImg
+                  v-if="oyuncuFormDialog.data.resim"
+                  :src="oyuncuFormDialog.data.resim"
+                  width="200"
+                  height="200"
+                  cover
+                  class="rounded"
+                />
+                <div v-else class="upload-placeholder rounded">
+                  <VIcon size="40" icon="tabler-user" />
+                  <span class="text-subtitle-2">Profil Resmi</span>
+                </div>
+                <VBtn
+                  color="primary"
+                  size="small"
+                  class="mt-2"
+                  prepend-icon="tabler-upload"
+                  @click="$refs.imageInput.click()"
+                >
+                  Resim Seç
+                </VBtn>
+                <input
+                  ref="imageInput"
+                  type="file"
+                  accept="image/*"
+                  class="d-none"
+                  @change="handleImageSelect"
+                />
+              </div>
+              <div v-else class="cropper-container">
+                <Cropper
+                  ref="cropper"
+                  :src="oyuncuFormDialog.selectedImage"
+                  :stencil-props="{
+                    aspectRatio: 1,
+                  }"
+                  class="cropper"
+                  @change="onChange"
+                />
+                <div class="d-flex gap-2 mt-2">
+                  <VBtn
+                    color="error"
+                    variant="text"
+                    @click="oyuncuFormDialog.cropperVisible = false"
+                  >
+                    İptal
+                  </VBtn>
+                  <VBtn
+                    color="success"
+                    @click="kırpmaUygula"
+                  >
+                    Uygula
+                  </VBtn>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ad Soyad -->
+            <VTextField
+              v-model="oyuncuFormDialog.data.adSoyad"
+              label="Adı Soyadı"
+              variant="outlined"
+              density="compact"
+              :rules="[v => !!v?.trim() || 'Ad Soyad alanı zorunludur']"
+              required
+            />
+
+            <!-- Gruplar -->
+            <VSelect
+              v-model="oyuncuFormDialog.data.gruplar"
+              :items="gruplar"
+              item-title="isim"
+              item-value="id"
+              label="Gruplar"
+              multiple
+              chips
+              variant="outlined"
+              density="compact"
+            />
+          </VForm>
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+          <VBtn
+            color="error"
+            variant="text"
+            @click="oyuncuFormDialog.show = false"
+          >
+            İptal
+          </VBtn>
+          <VBtn
+            color="primary"
+            :disabled="!oyuncuFormDialog.data.adSoyad?.trim()"
+            @click="kaydetOyuncu"
+          >
+            Kaydet
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- Oyuncu Yetenekleri Dialog -->
+    <VDialog v-model="oyuncuYetenekleriDialog.show" max-width="1200">
+      <VCard>
+        <VCardTitle>{{ oyuncuYetenekleriDialog.oyuncu?.adSoyad }} - Yetenekler</VCardTitle>
+        <VCardText>
+          <div class="d-flex flex-wrap gap-4">
+            <!-- Teknik Özellikler -->
+            <VCard variant="outlined" class="pa-4 flex-grow-1" style="min-width: 300px;">
+              <div class="text-h6 mb-4">Teknik Özellikler</div>
+              <div class="d-flex flex-column gap-4">
+                <div v-for="ozellik in teknikOzellikler" :key="ozellik.id" class="yetenek-slider">
+                  <div class="d-flex justify-space-between align-center mb-1">
+                    <span class="text-subtitle-2">{{ ozellik.isim }}</span>
+                    <VChip
+                      :color="yetenekRengi(oyuncuYetenekleriDialog.yetenekler[ozellik.id])"
+                      size="small"
+                    >
+                      {{ oyuncuYetenekleriDialog.yetenekler[ozellik.id] || 1 }}
+                    </VChip>
+                  </div>
+                  <VSlider
+                    v-model="oyuncuYetenekleriDialog.yetenekler[ozellik.id]"
+                    :min="1"
+                    :max="20"
+                    :step="1"
+                    :color="yetenekRengi(oyuncuYetenekleriDialog.yetenekler[ozellik.id])"
+                    hide-details
+                  />
+                </div>
+              </div>
+            </VCard>
+
+            <!-- Mental Özellikler -->
+            <VCard variant="outlined" class="pa-4 flex-grow-1" style="min-width: 300px;">
+              <div class="text-h6 mb-4">Mental Özellikler</div>
+              <div class="d-flex flex-column gap-4">
+                <div v-for="ozellik in mentalOzellikler" :key="ozellik.id" class="yetenek-slider">
+                  <div class="d-flex justify-space-between align-center mb-1">
+                    <span class="text-subtitle-2">{{ ozellik.isim }}</span>
+                    <VChip
+                      :color="yetenekRengi(oyuncuYetenekleriDialog.yetenekler[ozellik.id])"
+                      size="small"
+                    >
+                      {{ oyuncuYetenekleriDialog.yetenekler[ozellik.id] || 1 }}
+                    </VChip>
+                  </div>
+                  <VSlider
+                    v-model="oyuncuYetenekleriDialog.yetenekler[ozellik.id]"
+                    :min="1"
+                    :max="20"
+                    :step="1"
+                    :color="yetenekRengi(oyuncuYetenekleriDialog.yetenekler[ozellik.id])"
+                    hide-details
+                  />
+                </div>
+              </div>
+            </VCard>
+
+            <!-- Fiziksel Özellikler -->
+            <VCard variant="outlined" class="pa-4 flex-grow-1" style="min-width: 300px;">
+              <div class="text-h6 mb-4">Fiziksel Özellikler</div>
+              <div class="d-flex flex-column gap-4">
+                <div v-for="ozellik in fizikselOzellikler" :key="ozellik.id" class="yetenek-slider">
+                  <div class="d-flex justify-space-between align-center mb-1">
+                    <span class="text-subtitle-2">{{ ozellik.isim }}</span>
+                    <VChip
+                      :color="yetenekRengi(oyuncuYetenekleriDialog.yetenekler[ozellik.id])"
+                      size="small"
+                    >
+                      {{ oyuncuYetenekleriDialog.yetenekler[ozellik.id] || 1 }}
+                    </VChip>
+                  </div>
+                  <VSlider
+                    v-model="oyuncuYetenekleriDialog.yetenekler[ozellik.id]"
+                    :min="1"
+                    :max="20"
+                    :step="1"
+                    :color="yetenekRengi(oyuncuYetenekleriDialog.yetenekler[ozellik.id])"
+                    hide-details
+                  />
+                </div>
+              </div>
+            </VCard>
+          </div>
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+          <VBtn
+            color="error"
+            variant="text"
+            @click="oyuncuYetenekleriDialog.show = false"
+          >
+            İptal
+          </VBtn>
+          <VBtn
+            color="primary"
+            @click="kaydetYetenekler"
+          >
+            Kaydet
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+  </div>
+</template>
+
+<script setup lang="ts">
+import type { Grup } from '@/services/api'
+import api from '@/services/api'
+import { computed, onMounted, ref } from 'vue'
+import { Cropper } from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css'
+
+interface Oyuncu {
+  id: number
+  adSoyad: string
+  resim?: string
+  guc?: number
+  pozisyonlar?: {
+    [key: string]: number
+  }
+  gruplar?: Grup[]
+  yetenekler?: string[]
+}
+
+interface OyuncuYetenek {
+  ozellik_id: number
+  seviye: number
+}
+
+interface OyuncuOzelligi {
+  id: number
+  isim: string
+}
+
+declare module '@/services/api' {
+  interface Api {
+    getOyuncuOzellikleri(): Promise<OyuncuOzelligi[]>
+    getOyuncuYetenekleri(oyuncuId: number): Promise<OyuncuYetenek[]>
+    updateOyuncuYetenekleri(oyuncuId: number, yetenekler: OyuncuYetenek[]): Promise<void>
+  }
+}
+
+const havuzdakiOyuncular = ref<Oyuncu[]>([])
+const grupDialog = ref(false)
+const gruplar = ref<Grup[]>([])
+const yeniGrup = ref({
+  isim: ''
+})
+
+const oyuncuFormDialog = ref({
+  show: false,
+  isEdit: false,
+  data: {
+    id: 0,
+    adSoyad: '',
+    resim: '',
+    gruplar: [] as number[],
+  },
+  selectedImage: '',
+  cropperVisible: false,
+})
+
+const adSoyadKurallari = [
+  (v: string) => !!v?.trim() || 'Ad Soyad alanı zorunludur',
+  (v: string) => v?.trim().length >= 2 || 'Ad Soyad en az 2 karakter olmalıdır'
+]
+
+const oyuncuGruplariDialog = ref({
+  show: false,
+  oyuncu: null as Oyuncu | null,
+  seciliGruplar: [] as number[]
+})
+
+const oyuncuYetenekleriDialog = ref({
+  show: false,
+  oyuncu: null as Oyuncu | null,
+  yetenekler: {} as { [key: number]: number }
+})
+
+const oyuncuOzellikleri = ref<OyuncuOzelligi[]>([])
+
+// Oyuncuları yükle
+const oyunculariYukle = async () => {
+  try {
+    havuzdakiOyuncular.value = await api.getOyuncular()
+  } catch (error) {
+    console.error('Oyuncular yüklenirken hata:', error)
+  }
+}
+
+// Grupları yükle
+const gruplariYukle = async () => {
+  try {
+    gruplar.value = await api.getGruplar()
+  } catch (error) {
+    console.error('Gruplar yüklenirken hata:', error)
+  }
+}
+
+// Yeni grup ekle
+const yeniGrupEkle = async () => {
+  try {
+    if (!yeniGrup.value.isim) return
+
+    await api.createGrup({
+      isim: yeniGrup.value.isim
+    })
+
+    yeniGrup.value.isim = ''
+    await gruplariYukle()
+    showToast('Grup başarıyla eklendi', 'success')
+    } catch (error) {
+    console.error('Grup eklenirken hata:', error)
+    showToast('Grup eklenirken bir hata oluştu', 'error')
+  }
+}
+
+// Grup düzenle
+const grupDuzenle = (grup: Grup) => {
+  grup.duzenleniyor = true
+  grup.yeniIsim = grup.isim
+}
+
+// Grup ismini kaydet
+const grupIsmiKaydet = async (grup: Grup) => {
+  try {
+    if (!grup.yeniIsim || grup.yeniIsim === grup.isim) {
+      grup.duzenleniyor = false
+      return
+    }
+
+    await api.updateGrup(grup.id, {
+      isim: grup.yeniIsim
+    })
+
+    grup.isim = grup.yeniIsim
+    grup.duzenleniyor = false
+    showToast('Grup ismi güncellendi', 'success')
+  } catch (error) {
+    console.error('Grup güncellenirken hata:', error)
+    showToast('Grup güncellenirken bir hata oluştu', 'error')
+  }
+}
+
+// Grup sil
+const grupSil = async (grupId: number) => {
+  try {
+    await api.deleteGrup(grupId)
+    await gruplariYukle()
+    showToast('Grup başarıyla silindi', 'success')
+  } catch (error) {
+    console.error('Grup silinirken hata:', error)
+    showToast('Grup silinirken bir hata oluştu', 'error')
+  }
+}
+
+// Oyuncu gruplarını düzenle
+const oyuncuGruplariDuzenle = (oyuncu: Oyuncu) => {
+  oyuncuGruplariDialog.value = {
+    show: true,
+    oyuncu,
+    seciliGruplar: oyuncu.gruplar?.map(g => g.id) || []
+  }
+}
+
+// Oyuncu gruplarını kaydet
+const oyuncuGruplariKaydet = async () => {
+  try {
+    if (!oyuncuGruplariDialog.value.oyuncu) return
+
+    await api.updateOyuncuGruplari(
+      oyuncuGruplariDialog.value.oyuncu.id,
+      oyuncuGruplariDialog.value.seciliGruplar
+    )
+
+    await oyunculariYukle()
+    oyuncuGruplariDialog.value.show = false
+    showToast('Oyuncu grupları güncellendi', 'success')
+  } catch (error) {
+    console.error('Oyuncu grupları güncellenirken hata:', error)
+    showToast('Oyuncu grupları güncellenirken bir hata oluştu', 'error')
+  }
+}
+
+// Toast bildirimi için state
+const toast = ref({
+  show: false,
+  message: '',
+  color: 'success'
+})
+
+// Toast gösterme fonksiyonu
+const showToast = (message: string, color: 'success' | 'error' | 'warning' = 'success') => {
+  toast.value = {
+    show: true,
+    message,
+    color
+  }
+}
+
+// Güç rengi belirleme fonksiyonu
+const oyuncuGucRengi = (guc?: number) => {
+  if (!guc) return 'default'
+  if (guc >= 80) return 'success'
+  if (guc >= 60) return 'info'
+  return 'error'
+}
+
+// Pozisyon açıklama fonksiyonu
+const getPozisyonAciklama = (pozisyon: string, seviye: number) => {
+  const pozisyonlar: { [key: string]: string } = {
+    ST: 'Forvet',
+    LW: 'Sol Kanat',
+    OOS: 'Ofansif Orta Saha',
+    RW: 'Sağ Kanat',
+    CM: 'Orta Saha',
+    DM: 'Defansif Orta Saha',
+    DL: 'Sol Bek',
+    DC: 'Stoper',
+    DR: 'Sağ Bek',
+    GK: 'Kaleci'
+  }
+
+  const seviyeler = ['Çok Kötü', 'Kötü', 'Orta', 'İyi', 'Çok İyi']
+  return `${pozisyonlar[pozisyon]}: ${seviyeler[seviye - 1]}`
+}
+
+// Pozisyonları sırala
+const siraliPozisyonlar = (pozisyonlar: { [key: string]: number }): { [key: string]: number } => {
+  // Pozisyonları seviyelerine göre grupla
+  const gruplar: { [key: number]: { [key: string]: number } } = {}
+  
+  Object.entries(pozisyonlar).forEach(([poz, seviye]) => {
+    if (!gruplar[seviye]) {
+      gruplar[seviye] = {}
+    }
+    gruplar[seviye][poz] = seviye
+  })
+  
+  // Sıralı pozisyonları birleştir (5'ten 2'ye doğru)
+  const siraliPozisyonlar: { [key: string]: number } = {}
+  for (let seviye = 5; seviye >= 2; seviye--) {
+    if (gruplar[seviye]) {
+      Object.entries(gruplar[seviye]).forEach(([poz, sev]) => {
+        siraliPozisyonlar[poz] = sev
+      })
+    }
+  }
+  
+  return siraliPozisyonlar
+}
+
+// Oyuncu düzenleme
+const duzenleOyuncu = (oyuncu: Oyuncu) => {
+  oyuncuFormDialog.value = {
+    show: true,
+    isEdit: true,
+    data: {
+      id: oyuncu.id,
+      adSoyad: oyuncu.adSoyad,
+      resim: oyuncu.resim || '',
+      gruplar: oyuncu.gruplar?.map(g => g.id) || [],
+    },
+    selectedImage: '',
+    cropperVisible: false,
+  }
+}
+
+// Oyuncu silme
+const silOyuncu = async (oyuncuId: number) => {
+  try {
+    await api.deleteOyuncu(oyuncuId)
+    await oyunculariYukle()
+    showToast('Oyuncu başarıyla silindi', 'success')
+  } catch (error) {
+    console.error('Oyuncu silinirken hata:', error)
+    showToast('Oyuncu silinirken bir hata oluştu', 'error')
+  }
+}
+
+// Yeni oyuncu ekleme dialogunu aç
+const yeniOyuncuEkle = () => {
+  oyuncuFormDialog.value = {
+    show: true,
+    isEdit: false,
+    data: {
+      id: 0,
+      adSoyad: '',
+      resim: '',
+      gruplar: [],
+    },
+    selectedImage: '',
+    cropperVisible: false,
+  }
+}
+
+// Oyuncuyu kaydet
+const kaydetOyuncu = async () => {
+  try {
+    if (!oyuncuFormDialog.value.data.adSoyad?.trim()) {
+      showToast('Ad Soyad alanı zorunludur', 'error')
+      return
+    }
+
+    if (oyuncuFormDialog.value.isEdit) {
+      await api.updateOyuncu(oyuncuFormDialog.value.data.id, {
+        adSoyad: oyuncuFormDialog.value.data.adSoyad,
+        resim: oyuncuFormDialog.value.data.resim,
+      })
+      
+      // Grupları güncelle
+      await api.updateOyuncuGruplari(
+        oyuncuFormDialog.value.data.id,
+        oyuncuFormDialog.value.data.gruplar
+      )
+    } else {
+      const yeniOyuncu = {
+        adSoyad: oyuncuFormDialog.value.data.adSoyad,
+        resim: oyuncuFormDialog.value.data.resim,
+      }
+      const olusturulanOyuncu = await api.createOyuncu(yeniOyuncu)
+      
+      if (oyuncuFormDialog.value.data.gruplar.length > 0) {
+        await api.updateOyuncuGruplari(
+          olusturulanOyuncu.id,
+          oyuncuFormDialog.value.data.gruplar
+        )
+      }
+    }
+
+    await oyunculariYukle()
+    oyuncuFormDialog.value.show = false
+    showToast(
+      `Oyuncu başarıyla ${oyuncuFormDialog.value.isEdit ? 'güncellendi' : 'eklendi'}`,
+      'success'
+    )
+  } catch (error) {
+    console.error('Oyuncu kaydedilirken hata:', error)
+    showToast(
+      `Oyuncu ${oyuncuFormDialog.value.isEdit ? 'güncellenirken' : 'eklenirken'} bir hata oluştu`,
+      'error'
+    )
+  }
+}
+
+// Oyuncu özelliklerini yükle
+const ozellikleriYukle = async () => {
+  try {
+    oyuncuOzellikleri.value = await api.getOyuncuOzellikleri()
+  } catch (error) {
+    console.error('Özellikler yüklenirken hata:', error)
+  }
+}
+
+// Resim seçme işlemi
+const handleImageSelect = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (input.files && input.files[0]) {
+    const file = input.files[0]
+    oyuncuFormDialog.value.selectedImage = URL.createObjectURL(file)
+    oyuncuFormDialog.value.cropperVisible = true
+  }
+}
+
+// Cropper değişiklik eventi
+const onChange = () => {
+  // Cropper değişikliklerini takip etmek için kullanılabilir
+}
+
+// Kırpma işlemini uygula
+const cropperRef = ref<any>(null)
+const kırpmaUygula = () => {
+  const cropper = cropperRef.value?.cropper
+  if (cropper) {
+    const canvas = cropper.getCanvas()
+    if (canvas) {
+      const scaledCanvas = document.createElement('canvas')
+      scaledCanvas.width = 200
+      scaledCanvas.height = 200
+      const ctx = scaledCanvas.getContext('2d')
+      if (ctx) {
+        ctx.drawImage(canvas, 0, 0, 200, 200)
+        oyuncuFormDialog.value.data.resim = scaledCanvas.toDataURL('image/jpeg')
+      }
+    }
+  }
+  oyuncuFormDialog.value.cropperVisible = false
+}
+
+// Oyuncu yeteneklerini düzenle
+const oyuncuYetenekleriDuzenle = async (oyuncu: Oyuncu) => {
+  try {
+    const yetenekler = await api.getOyuncuYetenekleri(oyuncu.id)
+    const ozellikler = await api.getOyuncuOzellikleri()
+
+    // Tüm özellikleri döngüye al ve değeri olmayanlara 10 ata
+    const yetenekMap = yetenekler.reduce((acc: { [key: number]: number }, yetenek: OyuncuYetenek) => {
+      acc[yetenek.ozellik_id] = yetenek.seviye
+      return acc
+    }, {})
+
+    // Eksik özelliklere varsayılan değer ata
+    ozellikler.forEach(ozellik => {
+      if (!(ozellik.id in yetenekMap)) {
+        yetenekMap[ozellik.id] = 10
+      }
+    })
+
+    oyuncuYetenekleriDialog.value = {
+      show: true,
+      oyuncu,
+      yetenekler: yetenekMap
+    }
+  } catch (error) {
+    console.error('Yetenekler yüklenirken hata:', error)
+    showToast('Yetenekler yüklenirken bir hata oluştu', 'error')
+  }
+}
+
+// Yetenek seviyesine göre renk belirleme
+const yetenekRengi = (seviye: number) => {
+  if (!seviye) return 'grey'
+  if (seviye >= 16) return 'success'
+  if (seviye >= 11) return 'info'
+  if (seviye >= 6) return 'warning'
+  return 'error'
+}
+
+// Yetenekleri kaydet
+const kaydetYetenekler = async () => {
+  try {
+    if (!oyuncuYetenekleriDialog.value?.oyuncu) {
+      showToast('Oyuncu bilgisi bulunamadı', 'error')
+      return
+    }
+
+    const oyuncuId = oyuncuYetenekleriDialog.value.oyuncu.id
+    const yeteneklerArray = Object.entries(oyuncuYetenekleriDialog.value.yetenekler).map(([ozellik_id, seviye]) => ({
+      ozellik_id: Number(ozellik_id),
+      seviye: Number(seviye)
+    }))
+
+    // Yetenekleri API'ye gönder
+    await api.updateOyuncuYetenekleri(oyuncuId, yeteneklerArray)
+
+    await oyunculariYukle()
+    oyuncuYetenekleriDialog.value.show = false
+    showToast('Yetenekler başarıyla kaydedildi', 'success')
+  } catch (error) {
+    console.error('Yetenekler kaydedilirken hata:', error)
+    showToast('Yetenekler kaydedilirken bir hata oluştu', 'error')
+  }
+}
+
+// Özellik grupları
+const teknikOzellikler = computed(() => {
+  return oyuncuOzellikleri.value.filter(o => [
+    'Bitiricilik', 'Dripling', 'İlk Kontrol', 'Kafa Vuruşu', 'Korner',
+    'Markaj', 'Orta Yapma', 'Pas', 'Penaltı Kullanma', 'Serbest Vuruş Kullanma',
+    'Teknik', 'Top Kapma', 'Uzaktan Şut', 'Uzun Taç'
+  ].includes(o.isim))
+})
+
+const mentalOzellikler = computed(() => {
+  return oyuncuOzellikleri.value.filter(o => [
+    'Agresiflik', 'Cesaret', 'Çalışkanlık', 'Karar Alma', 'Kararlılık',
+    'Konsantrasyon', 'Liderlik', 'Önsezi', 'Özel Yetenek', 'Pozisyon Alma',
+    'Soğukkanlılık', 'Takım Oyunu', 'Topsuz Alan', 'Vizyon'
+  ].includes(o.isim))
+})
+
+const fizikselOzellikler = computed(() => {
+  return oyuncuOzellikleri.value.filter(o => [
+    'Çeviklik', 'Dayanıklılık', 'Denge', 'Güç', 'Hız',
+    'Hızlanma', 'Vücut Zindeliği', 'Zıplama'
+  ].includes(o.isim))
+})
+
+onMounted(() => {
+  oyunculariYukle()
+  gruplariYukle()
+  ozellikleriYukle()
+})
+</script>
+
+<style scoped>
+.positions-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 200px;
+  min-height: 28px;
+  align-items: center;
+}
+
+.position-mini-box {
+  font-size: 0.75rem;
+  padding: 4px 6px;
+  border-radius: 3px;
+  font-weight: bold;
+  min-width: 32px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.level-1 { background-color: white; color: #333; text-shadow: none; }
+.level-2 { background-color: #ffd700; color: #333; } /* Sarı - Kötü */
+.level-3 { background-color: #ff9800; color: white; } /* Turuncu - Ortalama */
+.level-4 { background-color: #2e7d32; color: white; } /* Koyu Yeşil - İyi */
+.level-5 { background-color: #66bb6a; color: white; } /* Açık Yeşil - Çok İyi */
+
+.yetenek-slider {
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.yetenek-slider:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 600px) {
+  .position-mini-box {
+    font-size: 0.7rem;
+    padding: 1px 3px;
+    min-width: 28px;
+  }
+}
+
+.image-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.upload-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.upload-placeholder {
+  width: 200px;
+  height: 200px;
+  background-color: rgb(var(--v-theme-surface-variant));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.cropper-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+.cropper {
+  height: 400px;
+  background-color: rgb(var(--v-theme-surface-variant));
+}
+</style> 
