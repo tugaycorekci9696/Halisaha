@@ -13,6 +13,14 @@
               >
                 Sıfırla
               </VBtn>
+              <VBtn
+                color="success"
+                size="small"
+                prepend-icon="tabler-dice"
+                @click="rastgeleTakimOlustur"
+              >
+                Rastgele Takım
+              </VBtn>
             <VSelect
               v-model="seciliGruplar"
               :items="gruplar"
@@ -786,6 +794,87 @@ function getGucSeviyesi(guc: number): number {
   if (guc <= 70) return 5;
   if (guc <= 85) return 6;
   return Math.min(10, Math.floor(guc / 10)); // 7-10 arası
+}
+
+const rastgeleTakimOlustur = async () => {
+  // Önce takımları sıfırla
+  takimlariSifirla();
+
+  // Seçili gruptaki oyuncuları al
+  const uygunOyuncular = filtrelenmisOyuncular.value;
+  if (uygunOyuncular.length < 2) {
+    showToast('Yeterli oyuncu yok!', 'error');
+    return;
+  }
+
+  // Pozisyonları belirle
+  const pozisyonlar: PozisyonKodu[] = ['GK', 'DL', 'DC', 'DC', 'DR', 'DM', 'CM', 'OOS', 'LW', 'RW', 'ST'];
+
+  // Her pozisyon için oyuncuları güçlerine göre sırala
+  const pozisyonOyunculari = pozisyonlar.map(pozisyon => {
+    return uygunOyuncular
+      .map(oyuncu => ({
+        oyuncu,
+        guc: oyuncu.pozisyonlar?.[pozisyon] || 1
+      }))
+      .sort((a, b) => b.guc - a.guc);
+  });
+
+  // Her takıma eşit sayıda oyuncu dağıtmak için
+  const oyuncuSayisi = Math.floor(uygunOyuncular.length / 2) * 2;
+  const takimBasinaOyuncu = oyuncuSayisi / 2;
+
+  // Kullanılan oyuncuları takip et
+  const kullanilmisOyuncular = new Set<number>();
+
+  // Her pozisyon için en güçlü oyuncuları seç ve takımlara dağıt
+  for (let i = 0; i < pozisyonlar.length && kullanilmisOyuncular.size < oyuncuSayisi; i++) {
+    const pozisyon = pozisyonlar[i];
+    const uygunAdaylar = pozisyonOyunculari[i].filter(
+      ({ oyuncu }) => !kullanilmisOyuncular.has(oyuncu.id)
+    );
+
+    // A takımı için en güçlü uygun oyuncuyu seç
+    if (uygunAdaylar.length > 0) {
+      const oyuncuA = uygunAdaylar[0].oyuncu;
+      takimA.value.oyuncular[pozisyon][0] = oyuncuA;
+      kullanilmisOyuncular.add(oyuncuA.id);
+      await updateOyuncuGucu(oyuncuA.id, pozisyon);
+    }
+
+    // B takımı için kalan en güçlü uygun oyuncuyu seç
+    const kalanAdaylar = uygunAdaylar.filter(
+      ({ oyuncu }) => !kullanilmisOyuncular.has(oyuncu.id)
+    );
+    if (kalanAdaylar.length > 0) {
+      const oyuncuB = kalanAdaylar[0].oyuncu;
+      takimB.value.oyuncular[pozisyon][0] = oyuncuB;
+      kullanilmisOyuncular.add(oyuncuB.id);
+      await updateOyuncuGucu(oyuncuB.id, pozisyon);
+    }
+  }
+
+  // Kalan pozisyonları doldur
+  const kalanOyuncular = uygunOyuncular.filter(
+    oyuncu => !kullanilmisOyuncular.has(oyuncu.id)
+  );
+
+  // Kalan oyuncuları rastgele pozisyonlara yerleştir
+  let kalanIndex = 0;
+  for (const pozisyon of pozisyonlar) {
+    if (!takimA.value.oyuncular[pozisyon][0] && kalanIndex < kalanOyuncular.length) {
+      const oyuncu = kalanOyuncular[kalanIndex++];
+      takimA.value.oyuncular[pozisyon][0] = oyuncu;
+      await updateOyuncuGucu(oyuncu.id, pozisyon);
+    }
+    if (!takimB.value.oyuncular[pozisyon][0] && kalanIndex < kalanOyuncular.length) {
+      const oyuncu = kalanOyuncular[kalanIndex++];
+      takimB.value.oyuncular[pozisyon][0] = oyuncu;
+      await updateOyuncuGucu(oyuncu.id, pozisyon);
+    }
+  }
+
+  showToast('Takımlar en güçlü pozisyonlara göre oluşturuldu!', 'success');
 }
 
 onMounted(async () => {
