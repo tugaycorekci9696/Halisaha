@@ -559,6 +559,9 @@ app.get('/api/oyuncular/:id/yetenekler', async (req, res) => {
 // Oyuncunun yeteneklerini güncelle
 app.put('/api/oyuncular/:id/yetenekler', async (req, res) => {
   try {
+    // İşlem süresini simüle etmek için 1 saniyelik gecikme
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     const oyuncuId = req.params.id;
     const { yetenekler } = req.body;
     

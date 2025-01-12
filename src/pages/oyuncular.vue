@@ -411,6 +411,8 @@
           <VBtn
             color="primary"
             @click="kaydetYetenekler"
+            :loading="oyuncuYetenekleriDialog.kaydediliyor"
+            :disabled="oyuncuYetenekleriDialog.kaydediliyor"
           >
             Kaydet
           </VBtn>
@@ -553,7 +555,8 @@ const oyuncuOzellikleri = ref<OyuncuOzelligi[]>([])
 const oyuncuYetenekleriDialog = ref({
   show: false,
   oyuncu: null as Oyuncu | null,
-  yetenekler: {} as { [key: number]: number }
+  yetenekler: {} as { [key: number]: number },
+  kaydediliyor: false
 })
 
 const showCropper = ref(false)
@@ -910,10 +913,11 @@ const yetenekRengi = (seviye: number) => {
 // Yetenekleri kaydet
 const kaydetYetenekler = async () => {
   try {
-    if (!oyuncuYetenekleriDialog.value?.oyuncu) {
-      showToast('Oyuncu bilgisi bulunamadı', 'error')
+    if (!oyuncuYetenekleriDialog.value?.oyuncu || oyuncuYetenekleriDialog.value.kaydediliyor) {
       return
     }
+
+    oyuncuYetenekleriDialog.value.kaydediliyor = true
 
     const oyuncuId = oyuncuYetenekleriDialog.value.oyuncu.id
     const yeteneklerArray = Object.entries(oyuncuYetenekleriDialog.value.yetenekler).map(([ozellik_id, seviye]) => ({
@@ -924,17 +928,6 @@ const kaydetYetenekler = async () => {
     // Yetenekleri API'ye gönder
     await api.updateOyuncuYetenekleri(oyuncuId, yeteneklerArray)
 
-    // Yeteneklere göre oyuncunun gücünü hesapla
-    const yetenekler = oyuncuYetenekleriDialog.value.yetenekler
-    const toplamYetenek = Object.values(yetenekler).reduce((acc, curr) => acc + Number(curr), 0)
-    const yetenekSayisi = Object.keys(yetenekler).length
-    const yeniGuc = Math.round((toplamYetenek / yetenekSayisi) * 5)
-
-    // Oyuncunun gücünü güncelle
-    await api.updateOyuncu(oyuncuId, {
-      guc: yeniGuc
-    })
-
     // Oyuncular listesini güncelle
     await oyunculariYukle()
 
@@ -943,6 +936,8 @@ const kaydetYetenekler = async () => {
   } catch (error) {
     console.error('Yetenekler kaydedilirken hata:', error)
     showToast('Yetenekler kaydedilirken bir hata oluştu', 'error')
+  } finally {
+    oyuncuYetenekleriDialog.value.kaydediliyor = false
   }
 }
 
