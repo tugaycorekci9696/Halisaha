@@ -1,5 +1,8 @@
 import cors from 'cors';
 import express from 'express';
+import fs from 'fs';
+import multer from 'multer';
+import path from 'path';
 import db from './db.js';
 
 const app = express();
@@ -9,275 +12,236 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Veritabanı şemasını oluştur
-const initDatabase = async () => {
-  try {
-    // Oyuncular tablosunu oluştur (eğer yoksa)
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS oyuncular (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        adSoyad VARCHAR(100) NOT NULL,
-        resim LONGTEXT,
-        guc INT,
-        oyuncu_sabit_guc INT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT NULL
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    `);
-
-    // Oyuncu özellikleri ana tablosunu oluştur
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS ozellikler (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        isim VARCHAR(50) NOT NULL UNIQUE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    `);
-
-    // Oyuncu yetenekleri tablosunu sil ve yeniden oluştur
-    await db.query('DROP TABLE IF EXISTS oyuncu_ozellikleri');
+// Resim yükleme için multer konfigürasyonu
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(process.cwd(), 'uploads/profil');
+    console.log('Upload directory:', uploadDir);
     
-    await db.query(`
-      CREATE TABLE oyuncu_ozellikleri (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        oyuncu_id INT NOT NULL,
-        isim VARCHAR(50) NOT NULL,
-        deger INT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT NULL,
-        FOREIGN KEY (oyuncu_id) REFERENCES oyuncular(id) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    `);
-
-    // Mevcut özellikleri temizle
-    await db.query('SET FOREIGN_KEY_CHECKS = 0');
-    await db.query('TRUNCATE TABLE ozellikler');
-    await db.query('SET FOREIGN_KEY_CHECKS = 1');
-
-    // Varsayılan özellikleri ekle
-    const varsayilanOzellikler = [
-      'Bitiricilik',
-      'Dripling',
-      'İlk Kontrol',
-      'Kafa Vuruşu',
-      'Korner',
-      'Markaj',
-      'Orta Yapma',
-      'Pas',
-      'Penaltı Kullanma',
-      'Serbest Vuruş Kullanma',
-      'Teknik',
-      'Top Kapma',
-      'Uzaktan Şut',
-      'Uzun Taç',
-      'Agresiflik',
-      'Cesaret',
-      'Çalışkanlık',
-      'Karar Alma',
-      'Kararlılık',
-      'Konsantrasyon',
-      'Liderlik',
-      'Önsezi',
-      'Özel Yetenek',
-      'Pozisyon Alma',
-      'Soğukkanlılık',
-      'Takım Oyunu',
-      'Topsuz Alan',
-      'Vizyon',
-      'Çeviklik',
-      'Dayanıklılık',
-      'Denge',
-      'Güç',
-      'Hız',
-      'Hızlanma',
-      'Vücut Zindeliği',
-      'Zıplama'
-    ];
-
-    // Her özelliği tekil olarak ekle
-    for (const ozellik of varsayilanOzellikler) {
-      await db.query(
-        'INSERT INTO ozellikler (isim) VALUES (?)',
-        [ozellik]
-      );
+    // Klasör yoksa oluştur
+    if (!fs.existsSync(uploadDir)) {
+      console.log('Creating upload directory...');
+      fs.mkdirSync(uploadDir, { recursive: true });
+      console.log('Upload directory created successfully');
     }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const filename = 'profil-' + uniqueSuffix + path.extname(file.originalname);
+    console.log('Generated filename:', filename);
+    cb(null, filename);
+  }
+});
 
-    // Pozisyonlar tablosunu oluştur (eğer yoksa)
+const upload = multer({ 
+  storage: storage,
+  fileFilter: function (req, file, cb) {
+    const filetypes = /jpeg|jpg|png/;
+    const mimetype = filetypes.test(file.mimetype);
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    }
+    cb(new Error('Sadece resim dosyaları yüklenebilir (jpeg, jpg, png)'));
+  }
+});
+
+// Veritabanını başlat
+const initializeDatabase = async () => {
+  try {
+    // Resim kolonunu güncelle
     await db.query(`
-      CREATE TABLE IF NOT EXISTS pozisyonlar (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        oyuncu_id INT NOT NULL,
-        pozisyon_kodu VARCHAR(10) NOT NULL,
-        seviye INT NOT NULL COMMENT '1: Çok Kötü, 2: Kötü, 3: Ortalama, 4: İyi, 5: Çok İyi',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT NULL,
-        FOREIGN KEY (oyuncu_id) REFERENCES oyuncular(id) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      ALTER TABLE oyuncular 
+      MODIFY COLUMN resim LONGTEXT,
+      MODIFY COLUMN updated_at DATETIME
     `);
 
-    // Gruplar tablosunu oluştur (eğer yoksa)
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS gruplar (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        isim VARCHAR(100) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT NULL
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    `);
-
-    // Oyuncu-Grup ilişki tablosunu oluştur (eğer yoksa)
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS oyuncu_gruplar (
-        oyuncu_id INT NOT NULL,
-        grup_id INT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (oyuncu_id, grup_id),
-        FOREIGN KEY (oyuncu_id) REFERENCES oyuncular(id) ON DELETE CASCADE,
-        FOREIGN KEY (grup_id) REFERENCES gruplar(id) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    `);
-
-    console.log('Veritabanı şeması kontrol edildi');
+    console.log('Veritabanı başarıyla güncellendi');
   } catch (error) {
-    console.error('Veritabanı şeması oluşturulurken hata:', error);
-    process.exit(1);
+    console.error('Veritabanı güncellenirken hata:', error);
   }
 };
 
-// Uygulama başladığında veritabanını hazırla
-initDatabase();
+// Veritabanını başlat
+initializeDatabase();
 
 // Tüm oyuncuları getir
 app.get('/api/oyuncular', async (req, res) => {
   try {
-    const [oyuncular] = await db.query('SELECT * FROM oyuncular');
-    
-    // Her oyuncu için özellikleri, pozisyonları ve grupları getir
-    for (const oyuncu of oyuncular) {
-      const [ozellikler] = await db.query(
-        'SELECT isim, deger FROM oyuncu_ozellikleri WHERE oyuncu_id = ?',
-        [oyuncu.id]
-      );
-      
+    // Önce oyuncuları getir
+    const [oyuncular] = await db.query(`
+      SELECT 
+        o.id, 
+        o.adSoyad,
+        o.resim,
+        o.created_at,
+        o.updated_at
+      FROM oyuncular o
+      ORDER BY o.id DESC
+    `);
+
+    // Her oyuncu için pozisyonları ve grupları getir
+    for (let oyuncu of oyuncular) {
+      // Pozisyonları getir
       const [pozisyonlar] = await db.query(
-        'SELECT pozisyon_kodu, seviye FROM pozisyonlar WHERE oyuncu_id = ?',
+        'SELECT ST, OOS, RW, LW, CM, DM, DC, DR, DL, GK FROM pozisyonlar WHERE oyuncu_id = ?',
         [oyuncu.id]
       );
 
+      // Pozisyonları ayrı bir nesne olarak ekle
+      oyuncu.pozisyonlar = pozisyonlar[0] || {
+        ST: 1, OOS: 1, RW: 1, LW: 1, CM: 1, 
+        DM: 1, DC: 1, DR: 1, DL: 1, GK: 1
+      };
+
+      // Grupları getir
       const [gruplar] = await db.query(`
-        SELECT g.*, (
-          SELECT COUNT(*) 
-          FROM oyuncu_gruplar og2 
-          WHERE og2.grup_id = g.id
-        ) as oyuncuSayisi
+        SELECT g.id, g.isim
         FROM gruplar g
         INNER JOIN oyuncu_gruplar og ON g.id = og.grup_id
         WHERE og.oyuncu_id = ?
       `, [oyuncu.id]);
       
-      // Özellikleri obje formatına dönüştür
-      const yetenekler = {};
-      ozellikler.forEach(ozellik => {
-        yetenekler[ozellik.ozellik_adi] = ozellik.deger;
-      });
-      
-      // Pozisyonları obje formatına dönüştür
-      const pozisyonSeviyeleri = {};
-      pozisyonlar.forEach(poz => {
-        pozisyonSeviyeleri[poz.pozisyon_kodu] = poz.seviye;
-      });
-      
-      oyuncu.yetenekler = yetenekler;
-      oyuncu.pozisyonlar = pozisyonSeviyeleri;
-      oyuncu.gruplar = gruplar;
+      oyuncu.gruplar = gruplar || [];
     }
     
     res.json(oyuncular);
   } catch (error) {
-    console.error(error);
+    console.error('Oyuncular getirilirken hata:', error);
     res.status(500).json({ error: 'Sunucu hatası' });
   }
 });
 
-// Yeni oyuncu ekle
+// Tek oyuncu getir
+app.get('/api/oyuncular/:id', async (req, res) => {
+  try {
+    const oyuncuId = parseInt(req.params.id);
+    
+    // Oyuncuyu getir
+    const [oyuncular] = await db.query(`
+      SELECT 
+        o.id, 
+        o.adSoyad,
+        o.resim,
+        o.created_at,
+        o.updated_at
+      FROM oyuncular o
+      WHERE o.id = ?
+    `, [oyuncuId]);
+
+    if (oyuncular.length === 0) {
+      return res.status(404).json({ error: 'Oyuncu bulunamadı' });
+    }
+
+    const oyuncu = oyuncular[0];
+
+    // Pozisyonları getir
+    const [pozisyonlar] = await db.query(
+      'SELECT ST, OOS, RW, LW, CM, DM, DC, DR, DL, GK FROM pozisyonlar WHERE oyuncu_id = ?',
+      [oyuncu.id]
+    );
+
+    // Pozisyonları ayrı bir nesne olarak ekle
+    oyuncu.pozisyonlar = pozisyonlar[0] || {
+      ST: 1, OOS: 1, RW: 1, LW: 1, CM: 1, 
+      DM: 1, DC: 1, DR: 1, DL: 1, GK: 1
+    };
+
+    // Grupları getir
+    const [gruplar] = await db.query(`
+      SELECT g.id, g.isim
+      FROM gruplar g
+      INNER JOIN oyuncu_gruplar og ON g.id = og.grup_id
+      WHERE og.oyuncu_id = ?
+    `, [oyuncu.id]);
+
+    oyuncu.gruplar = gruplar || [];
+
+    res.json(oyuncu);
+  } catch (error) {
+    console.error('Oyuncu getirilirken hata:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Oyuncu ekle
 app.post('/api/oyuncular', async (req, res) => {
   try {
-    const { adSoyad, resim, yetenekler, guc, pozisyonlar, gruplar } = req.body;
-    
-    // Önce oyuncuyu ekle (varsayılan güç değeri 50 ile)
-    const [result] = await db.query(
-      'INSERT INTO oyuncular (adSoyad, resim, guc) VALUES (?, ?, ?)',
-      [adSoyad, resim, 50]
-    );
-    
-    const oyuncuId = result.insertId;
+    const { adSoyad, resim, gruplar, pozisyonlar } = req.body;
+    console.log('Gelen veriler:');
+    console.log('- Ad Soyad:', adSoyad);
+    console.log('- Resim var mı?:', resim ? 'Evet' : 'Hayır');
+    console.log('- Resim uzunluğu:', resim ? resim.length : 0);
+    console.log('- Resim başlangıcı:', resim ? resim.substring(0, 50) + '...' : 'Yok');
 
-    // Tüm özellikleri getir ve her biri için varsayılan değer olarak 10 ata
-    const [ozellikler] = await db.query('SELECT id FROM ozellikler');
-    
-    // Varsayılan güç hesaplama (10 * özellik sayısı * 5 / özellik sayısı = 50)
-    for (const ozellik of ozellikler) {
-      await db.query(
-        'INSERT INTO oyuncu_yetenekleri (oyuncu_id, ozellik_id, seviye) VALUES (?, ?, ?)',
-        [oyuncuId, ozellik.id, 10]
-      );
-    }
-    
+    // Oyuncuyu ekle
+    const [result] = await db.query(
+      'INSERT INTO oyuncular (adSoyad, resim) VALUES (?, ?)',
+      [adSoyad, resim]
+    );
+    const oyuncuId = result.insertId;
+    console.log('Oyuncu eklendi, ID:', oyuncuId);
+
+    // Eklenen resmi kontrol et
+    const [[kontrol]] = await db.query('SELECT resim FROM oyuncular WHERE id = ?', [oyuncuId]);
+    console.log('Veritabanına kaydedilen resim var mı?:', kontrol.resim ? 'Evet' : 'Hayır');
+    console.log('Veritabanındaki resim uzunluğu:', kontrol.resim ? kontrol.resim.length : 0);
+
     // Pozisyonları ekle
     if (pozisyonlar) {
-      for (const [pozisyonKodu, seviye] of Object.entries(pozisyonlar)) {
-        if (seviye > 0) { // Sadece seçili pozisyonları kaydet
-          await db.query(
-            'INSERT INTO pozisyonlar (oyuncu_id, pozisyon_kodu, seviye) VALUES (?, ?, ?)',
-            [oyuncuId, pozisyonKodu, seviye]
-          );
+      const pozisyonEslestirme = { MC: 'CM' }; // MC -> CM dönüşümü için
+      const pozisyonVerileri = {};
+      
+      for (const [pozisyon, seviye] of Object.entries(pozisyonlar)) {
+        const dbPozisyon = pozisyonEslestirme[pozisyon] || pozisyon;
+        if (seviye >= 1 && seviye <= 5) {
+          pozisyonVerileri[dbPozisyon] = seviye;
         }
+      }
+
+      if (Object.keys(pozisyonVerileri).length > 0) {
+        const columns = ['oyuncu_id', ...Object.keys(pozisyonVerileri)];
+        const values = [oyuncuId, ...Object.values(pozisyonVerileri)];
+        const placeholders = Array(values.length).fill('?').join(',');
+        
+        await db.query(
+          `INSERT INTO pozisyonlar (${columns.join(',')}) VALUES (${placeholders})`,
+          values
+        );
+        console.log('Pozisyonlar eklendi:', pozisyonVerileri);
       }
     }
 
     // Grupları ekle
     if (gruplar && gruplar.length > 0) {
-      for (const grupId of gruplar) {
+      const grupValues = gruplar.map(grup => {
+        const grupId = typeof grup === 'number' ? grup : (grup && grup.id ? grup.id : null);
+        return [oyuncuId, grupId];
+      }).filter(([_, grupId]) => grupId !== null);
+
+      if (grupValues.length > 0) {
         await db.query(
-          'INSERT INTO oyuncu_gruplar (oyuncu_id, grup_id) VALUES (?, ?)',
-          [oyuncuId, grupId]
+          'INSERT INTO oyuncu_gruplar (oyuncu_id, grup_id) VALUES ?',
+          [grupValues]
         );
+        console.log('Gruplar eklendi');
       }
     }
-    
-    // Oluşturulan oyuncuyu tüm bilgileriyle birlikte getir
-    const [[yeniOyuncu]] = await db.query('SELECT * FROM oyuncular WHERE id = ?', [oyuncuId]);
-    
-    // Oyuncunun gruplarını getir
-    const [oyuncuGruplari] = await db.query(`
-      SELECT g.*, (
-        SELECT COUNT(*) 
-        FROM oyuncu_gruplar og2 
-        WHERE og2.grup_id = g.id
-      ) as oyuncuSayisi
-      FROM gruplar g
-      INNER JOIN oyuncu_gruplar og ON g.id = og.grup_id
-      WHERE og.oyuncu_id = ?
+
+    // Eklenen oyuncunun tüm bilgilerini getir
+    const [[oyuncu]] = await db.query(`
+      SELECT o.*, 
+             p.ST, p.OOS, p.RW, p.LW, p.CM, p.DM, p.DC, p.DR, p.DL, p.GK
+      FROM oyuncular o
+      LEFT JOIN pozisyonlar p ON o.id = p.oyuncu_id
+      WHERE o.id = ?
     `, [oyuncuId]);
 
-    // Oyuncunun pozisyonlarını getir
-    const [oyuncuPozisyonlari] = await db.query(
-      'SELECT pozisyon_kodu, seviye FROM pozisyonlar WHERE oyuncu_id = ?',
-      [oyuncuId]
-    );
-
-    // Pozisyonları obje formatına dönüştür
-    const pozisyonSeviyeleri = {};
-    oyuncuPozisyonlari.forEach(poz => {
-      pozisyonSeviyeleri[poz.pozisyon_kodu] = poz.seviye;
-    });
-
-    yeniOyuncu.gruplar = oyuncuGruplari;
-    yeniOyuncu.pozisyonlar = pozisyonSeviyeleri;
-    
-    res.json(yeniOyuncu);
+    res.json(oyuncu);
   } catch (error) {
-    console.error(error);
+    console.error('Oyuncu eklenirken hata:', error);
     res.status(500).json({ error: 'Sunucu hatası' });
   }
 });
@@ -285,73 +249,63 @@ app.post('/api/oyuncular', async (req, res) => {
 // Oyuncu güncelle
 app.put('/api/oyuncular/:id', async (req, res) => {
   try {
-    const { adSoyad, resim, yetenekler, guc, oyuncu_sabit_guc, pozisyonlar } = req.body;
-    const oyuncuId = req.params.id;
-    
-    // Güncelleme sorgusunu oluştur
-    let updateFields = [];
-    let updateValues = [];
-    
-    if (adSoyad !== undefined) {
-      updateFields.push('adSoyad = ?');
-      updateValues.push(adSoyad);
-    }
-    if (resim !== undefined) {
-      updateFields.push('resim = ?');
-      updateValues.push(resim);
-    }
-    if (guc !== undefined) {
-      updateFields.push('guc = ?');
-      updateValues.push(guc);
-    }
-    if (oyuncu_sabit_guc !== undefined) {
-      updateFields.push('oyuncu_sabit_guc = ?');
-      updateValues.push(oyuncu_sabit_guc);
-    }
-    
-    // updated_at alanını her zaman güncelle
-    updateFields.push('updated_at = NOW()');
-    
-    // Oyuncuyu güncelle
-    if (updateFields.length > 0) {
-      await db.query(
-        `UPDATE oyuncular SET ${updateFields.join(', ')} WHERE id = ?`,
-        [...updateValues, oyuncuId]
-      );
-    }
-    
-    // Yetenekleri güncelle (eğer gönderilmişse)
-    if (yetenekler) {
-      // Önce mevcut özellikleri sil
-      await db.query('DELETE FROM oyuncu_ozellikleri WHERE oyuncu_id = ?', [oyuncuId]);
-      
-      // Yeni özellikleri ekle
-      for (const [ozellikAdi, deger] of Object.entries(yetenekler)) {
-        await db.query(
-          'INSERT INTO oyuncu_ozellikleri (oyuncu_id, ozellik_adi, deger) VALUES (?, ?, ?)',
-          [oyuncuId, ozellikAdi, deger]
-        );
-      }
+    const oyuncuId = parseInt(req.params.id);
+    const { adSoyad, pozisyonlar, gruplar } = req.body;
+    console.log('Gelen veriler:', { adSoyad, pozisyonlar, gruplar });
+
+    // Oyuncunun var olup olmadığını kontrol et
+    const [oyuncuKontrol] = await db.query('SELECT * FROM oyuncular WHERE id = ?', [oyuncuId]);
+    if (!oyuncuKontrol || oyuncuKontrol.length === 0) {
+      return res.status(404).json({ error: 'Oyuncu bulunamadı' });
     }
 
-    // Pozisyonları güncelle (eğer gönderilmişse)
+    // adSoyad alanı varsa güncelle
+    if (adSoyad) {
+      await db.query('UPDATE oyuncular SET adSoyad = ? WHERE id = ?', [adSoyad, oyuncuId]);
+    }
+
+    // Pozisyonları güncelle
     if (pozisyonlar) {
-      // Önce mevcut pozisyonları sil
-      await db.query('DELETE FROM pozisyonlar WHERE oyuncu_id = ?', [oyuncuId]);
+      const pozisyonSorgusu = Object.entries(pozisyonlar)
+        .map(([key, value]) => `${key} = ${parseInt(value)}`)
+        .join(', ');
       
-      // Yeni pozisyonları ekle
-      for (const [pozisyonKodu, seviye] of Object.entries(pozisyonlar)) {
-        if (seviye > 0) { // Sadece seçili pozisyonları kaydet
-          await db.query(
-            'INSERT INTO pozisyonlar (oyuncu_id, pozisyon_kodu, seviye) VALUES (?, ?, ?)',
-            [oyuncuId, pozisyonKodu, seviye]
-          );
-        }
+      if (pozisyonSorgusu) {
+        await db.query(`UPDATE pozisyonlar SET ${pozisyonSorgusu} WHERE oyuncu_id = ?`, [oyuncuId]);
       }
     }
 
-    // Güncellenmiş oyuncuyu getir
+    // Grupları güncelle
+    if (Array.isArray(gruplar) && gruplar.length > 0) {
+      // Mevcut grupları sil
+      await db.query('DELETE FROM oyuncu_gruplar WHERE oyuncu_id = ?', [oyuncuId]);
+      
+      // Yeni grupları ekle
+      const grupValues = gruplar.map(grup => [oyuncuId, parseInt(grup.id)]);
+      await db.query('INSERT INTO oyuncu_gruplar (oyuncu_id, grup_id) VALUES ?', [grupValues]);
+    }
+
+    // Güncellenmiş oyuncu bilgilerini getir
     const [[oyuncu]] = await db.query('SELECT * FROM oyuncular WHERE id = ?', [oyuncuId]);
+    
+    // Pozisyonları getir
+    const [pozisyonlarSonuc] = await db.query('SELECT * FROM pozisyonlar WHERE oyuncu_id = ?', [oyuncuId]);
+    if (pozisyonlarSonuc && pozisyonlarSonuc.length > 0) {
+      oyuncu.pozisyonlar = pozisyonlarSonuc[0];
+      delete oyuncu.pozisyonlar.id;
+      delete oyuncu.pozisyonlar.oyuncu_id;
+      delete oyuncu.pozisyonlar.created_at;
+      delete oyuncu.pozisyonlar.updated_at;
+    }
+
+    // Grupları getir
+    const [gruplarSonuc] = await db.query(`
+      SELECT g.* 
+      FROM gruplar g
+      INNER JOIN oyuncu_gruplar og ON g.id = og.grup_id
+      WHERE og.oyuncu_id = ?
+    `, [oyuncuId]);
+    oyuncu.gruplar = gruplarSonuc;
     
     res.json(oyuncu);
   } catch (error) {
@@ -542,13 +496,38 @@ app.get('/api/oyuncular/:id/yetenekler', async (req, res) => {
   try {
     const oyuncuId = req.params.id;
     const [yetenekler] = await db.query(`
-      SELECT o.id as ozellik_id, COALESCE(oo.deger, 10) as seviye
-      FROM ozellikler o
-      LEFT JOIN oyuncu_ozellikleri oo ON o.isim = oo.isim AND oo.oyuncu_id = ?
-      ORDER BY o.id
+      SELECT 
+        bitiricilik, dripling, ilkkontrol, kafavurusu, korner,
+        markaj, ortayapma, pas, penaltikullanma, serbestvuruskullanma,
+        teknik, topkapma, uzaktansut, uzuntac, agresiflik,
+        cesaret, caliskanlik, kararalma, kararlilik, konsantrasyon,
+        liderlik, onsezi, ozelyetenek, pozisyonalma, sogukkanlilik,
+        takimoyunu, topsuzalan, vizyon, ceviklik, dayaniklilik,
+        denge, guc, hiz, hizlanma, vucutzindeligi, ziplama
+      FROM oyuncu_ozellikleri 
+      WHERE oyuncu_id = ?
     `, [oyuncuId]);
     
-    res.json(yetenekler);
+    // Eğer oyuncunun yetenek kaydı yoksa varsayılan değerlerle oluştur
+    if (!yetenekler || yetenekler.length === 0) {
+      await db.query('INSERT INTO oyuncu_ozellikleri (oyuncu_id) VALUES (?)', [oyuncuId]);
+      const [yeniYetenekler] = await db.query(`
+        SELECT 
+          bitiricilik, dripling, ilkkontrol, kafavurusu, korner,
+          markaj, ortayapma, pas, penaltikullanma, serbestvuruskullanma,
+          teknik, topkapma, uzaktansut, uzuntac, agresiflik,
+          cesaret, caliskanlik, kararalma, kararlilik, konsantrasyon,
+          liderlik, onsezi, ozelyetenek, pozisyonalma, sogukkanlilik,
+          takimoyunu, topsuzalan, vizyon, ceviklik, dayaniklilik,
+          denge, guc, hiz, hizlanma, vucutzindeligi, ziplama
+        FROM oyuncu_ozellikleri 
+        WHERE oyuncu_id = ?
+      `, [oyuncuId]);
+      
+      res.json(yeniYetenekler[0]);
+    } else {
+      res.json(yetenekler[0]);
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Sunucu hatası' });
@@ -560,37 +539,248 @@ app.put('/api/oyuncular/:id/yetenekler', async (req, res) => {
   try {
     const oyuncuId = req.params.id;
     const { yetenekler } = req.body;
+    
+    console.log('Gelen yetenekler:', yetenekler);
 
     // Yetenekler kontrolü
     if (!yetenekler || !Array.isArray(yetenekler)) {
       return res.status(400).json({ error: 'Yetenekler bir dizi olarak gönderilmelidir' });
     }
 
-    // Önce mevcut yetenekleri sil
-    await db.query('DELETE FROM oyuncu_ozellikleri WHERE oyuncu_id = ?', [oyuncuId]);
-
-    // Yeni yetenekleri ekle
-    for (const yetenek of yetenekler) {
-      if (!yetenek.ozellik_id) {
-        continue; // Geçersiz yetenek verilerini atla
-      }
-
-      // Özellik adını al
-      const [[ozellik]] = await db.query('SELECT isim FROM ozellikler WHERE id = ?', [yetenek.ozellik_id]);
-      if (!ozellik) continue;
-      
-      await db.query(`
-        INSERT INTO oyuncu_ozellikleri (oyuncu_id, isim, deger)
-        VALUES (?, ?, ?)
-      `, [oyuncuId, ozellik.isim, yetenek.seviye]);
+    // Önce oyuncunun mevcut olup olmadığını kontrol et
+    const [oyuncu] = await db.query('SELECT * FROM oyuncular WHERE id = ?', [oyuncuId]);
+    if (!oyuncu || oyuncu.length === 0) {
+      return res.status(404).json({ error: 'Oyuncu bulunamadı' });
     }
 
-    res.json({ message: 'Yetenekler güncellendi' });
+    // Oyuncunun özelliklerini güncelle
+    for (const yetenek of yetenekler) {
+      try {
+        // Özellik adını al
+        const [ozellik] = await db.query('SELECT isim FROM ozellikler WHERE id = ?', [yetenek.ozellik_id]);
+        
+        if (ozellik && ozellik.length > 0) {
+          // Özellik adını normalize et
+          let kolonAdi = ozellik[0].isim
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')  // Aksanları kaldır
+            .toLowerCase()
+            .replace(/İ/g, 'i')
+            .replace(/I/g, 'i')
+            .replace(/ı/g, 'i')
+            .replace(/Ğ/g, 'g')
+            .replace(/ğ/g, 'g')
+            .replace(/Ü/g, 'u')
+            .replace(/ü/g, 'u')
+            .replace(/Ş/g, 's')
+            .replace(/ş/g, 's')
+            .replace(/Ö/g, 'o')
+            .replace(/ö/g, 'o')
+            .replace(/Ç/g, 'c')
+            .replace(/ç/g, 'c')
+            .replace(/\s+/g, '');
+
+          console.log('Güncellenecek kolon:', kolonAdi, 'Değer:', yetenek.seviye);
+          
+          // Yeteneği güncelle
+          await db.query(`
+            UPDATE oyuncu_ozellikleri 
+            SET ?? = ?
+            WHERE oyuncu_id = ?
+          `, [kolonAdi, yetenek.seviye, oyuncuId]);
+        }
+      } catch (error) {
+        console.error('Yetenek güncellenirken hata:', error);
+        console.log('Hatalı yetenek:', yetenek);
+      }
+    }
+
+    res.json({ success: true });
   } catch (error) {
-    console.error(error);
+    console.error('Yetenekler güncellenirken hata:', error);
     res.status(500).json({ error: 'Sunucu hatası' });
   }
 });
+
+// Oyuncuya pozisyon ekle
+app.post('/api/oyuncular/:id/pozisyonlar', async (req, res) => {
+  try {
+    const oyuncuId = req.params.id;
+    const { pozisyon, seviye } = req.body;
+
+    console.log('Gelen pozisyon verisi:', req.body);
+
+    // Önce oyuncunun var olup olmadığını kontrol et
+    const [[oyuncuKontrol]] = await db.query('SELECT id FROM oyuncular WHERE id = ?', [oyuncuId]);
+    if (!oyuncuKontrol) {
+      return res.status(404).json({ error: 'Oyuncu bulunamadı' });
+    }
+
+    // Mevcut pozisyon kaydını kontrol et
+    const [pozisyonKaydi] = await db.query('SELECT id FROM pozisyonlar WHERE oyuncu_id = ?', [oyuncuId]);
+
+    if (!pozisyonKaydi || pozisyonKaydi.length === 0) {
+      // Pozisyon kaydı yoksa yeni kayıt oluştur (tüm pozisyonlar varsayılan olarak 1)
+      await db.query('INSERT INTO pozisyonlar (oyuncu_id) VALUES (?)', [oyuncuId]);
+    }
+
+    // Pozisyonu güncelle
+    if (pozisyon && seviye >= 1 && seviye <= 5) {
+      // MC pozisyonunu CM olarak değiştir
+      const dbPozisyon = pozisyon === 'MC' ? 'CM' : pozisyon;
+      
+      const updateQuery = `
+        UPDATE pozisyonlar 
+        SET ${dbPozisyon} = ?, updated_at = NOW()
+        WHERE oyuncu_id = ?
+      `;
+      
+      console.log('Pozisyon güncelleme sorgusu:', updateQuery);
+      console.log('Pozisyon değerleri:', [seviye, oyuncuId]);
+      
+      await db.query(updateQuery, [seviye, oyuncuId]);
+    }
+
+    // Güncellenmiş pozisyonları getir
+    const [[guncelPozisyonlar]] = await db.query('SELECT * FROM pozisyonlar WHERE oyuncu_id = ?', [oyuncuId]);
+    
+    res.json(guncelPozisyonlar);
+  } catch (error) {
+    console.error('Pozisyon eklenirken hata:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Oyuncunun pozisyonlarını getir
+app.get('/api/oyuncular/:id/pozisyonlar', async (req, res) => {
+  try {
+    const oyuncuId = req.params.id;
+
+    // Önce oyuncunun var olup olmadığını kontrol et
+    const [[oyuncuKontrol]] = await db.query('SELECT id FROM oyuncular WHERE id = ?', [oyuncuId]);
+    if (!oyuncuKontrol) {
+      return res.status(404).json({ error: 'Oyuncu bulunamadı' });
+    }
+
+    // Pozisyonları getir
+    const [pozisyonlar] = await db.query('SELECT * FROM pozisyonlar WHERE oyuncu_id = ?', [oyuncuId]);
+
+    if (!pozisyonlar || pozisyonlar.length === 0) {
+      // Pozisyon kaydı yoksa yeni kayıt oluştur
+      await db.query('INSERT INTO pozisyonlar (oyuncu_id) VALUES (?)', [oyuncuId]);
+      const [yeniPozisyonlar] = await db.query('SELECT * FROM pozisyonlar WHERE oyuncu_id = ?', [oyuncuId]);
+      return res.json(yeniPozisyonlar[0]);
+    }
+
+    res.json(pozisyonlar[0]);
+  } catch (error) {
+    console.error('Pozisyonlar getirilirken hata:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Oyuncunun pozisyonlarını güncelle
+app.put('/api/oyuncular/:id/pozisyonlar', async (req, res) => {
+  try {
+    const oyuncuId = req.params.id;
+    const pozisyonlar = req.body;
+
+    console.log('Gelen pozisyon güncellemeleri:', pozisyonlar);
+
+    // Önce oyuncunun var olup olmadığını kontrol et
+    const [[oyuncuKontrol]] = await db.query('SELECT id FROM oyuncular WHERE id = ?', [oyuncuId]);
+    if (!oyuncuKontrol) {
+      return res.status(404).json({ error: 'Oyuncu bulunamadı' });
+    }
+
+    // Mevcut pozisyon kaydını kontrol et
+    const [pozisyonKaydi] = await db.query('SELECT id FROM pozisyonlar WHERE oyuncu_id = ?', [oyuncuId]);
+
+    if (!pozisyonKaydi || pozisyonKaydi.length === 0) {
+      // Pozisyon kaydı yoksa yeni kayıt oluştur
+      await db.query('INSERT INTO pozisyonlar (oyuncu_id) VALUES (?)', [oyuncuId]);
+    }
+
+    // Pozisyonları güncelle
+    const updateFields = [];
+    const updateValues = [];
+
+    Object.entries(pozisyonlar).forEach(([pozisyon, seviye]) => {
+      if (typeof seviye === 'number' && seviye >= 1 && seviye <= 5) {
+        // MC pozisyonunu CM olarak değiştir
+        const dbPozisyon = pozisyon === 'MC' ? 'CM' : pozisyon;
+        updateFields.push(`${dbPozisyon} = ?`);
+        updateValues.push(seviye);
+      }
+    });
+
+    if (updateFields.length > 0) {
+      const updateQuery = `
+        UPDATE pozisyonlar 
+        SET ${updateFields.join(', ')}, updated_at = NOW()
+        WHERE oyuncu_id = ?
+      `;
+      
+      console.log('Pozisyon güncelleme sorgusu:', updateQuery);
+      console.log('Pozisyon değerleri:', [...updateValues, oyuncuId]);
+      
+      await db.query(updateQuery, [...updateValues, oyuncuId]);
+    }
+
+    // Güncellenmiş pozisyonları getir
+    const [[guncelPozisyonlar]] = await db.query('SELECT * FROM pozisyonlar WHERE oyuncu_id = ?', [oyuncuId]);
+    
+    res.json(guncelPozisyonlar);
+  } catch (error) {
+    console.error('Pozisyonlar güncellenirken hata:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Profil resmi yükleme endpoint'i
+app.post('/api/oyuncular/:id/resim', upload.single('resim'), async (req, res) => {
+  try {
+    const oyuncuId = parseInt(req.params.id);
+    console.log('Uploading profile picture for player:', oyuncuId);
+    
+    if (!req.file) {
+      console.error('No file uploaded');
+      return res.status(400).json({ error: 'Resim yüklenmedi' });
+    }
+
+    console.log('File details:', req.file);
+
+    // Eski resmi kontrol et ve sil
+    const [oyuncu] = await db.query('SELECT resim FROM oyuncular WHERE id = ?', [oyuncuId]);
+    if (oyuncu.length > 0 && oyuncu[0].resim) {
+      const eskiResimYolu = path.join(process.cwd(), oyuncu[0].resim);
+      console.log('Old image path:', eskiResimYolu);
+      if (fs.existsSync(eskiResimYolu)) {
+        console.log('Deleting old image...');
+        fs.unlinkSync(eskiResimYolu);
+        console.log('Old image deleted successfully');
+      }
+    }
+
+    // Yeni resim yolunu kaydet
+    const resimYolu = path.join('uploads/profil', req.file.filename).replace(/\\/g, '/');
+    console.log('New image path to save:', resimYolu);
+    
+    await db.query('UPDATE oyuncular SET resim = ? WHERE id = ?', [resimYolu, oyuncuId]);
+    console.log('Database updated successfully');
+
+    res.json({ 
+      message: 'Profil resmi güncellendi',
+      resimYolu: resimYolu
+    });
+  } catch (error) {
+    console.error('Error uploading profile picture:', error);
+    res.status(500).json({ error: 'Profil resmi yüklenemedi' });
+  }
+});
+
+// Statik dosya sunucusu
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 app.listen(port, () => {
   console.log(`Server http://localhost:${port} adresinde çalışıyor`);

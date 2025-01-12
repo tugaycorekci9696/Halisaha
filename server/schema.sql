@@ -1,13 +1,84 @@
 CREATE DATABASE IF NOT EXISTS halisaha;
+
 USE halisaha;
 
-CREATE TABLE IF NOT EXISTS oyuncular (
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS oyuncu_ozellikleri;
+DROP TABLE IF EXISTS pozisyonlar;
+DROP TABLE IF EXISTS oyuncu_gruplar;
+DROP TABLE IF EXISTS oyuncular;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+CREATE TABLE oyuncular (
   id INT AUTO_INCREMENT PRIMARY KEY,
   adSoyad VARCHAR(100) NOT NULL,
-  pozisyon VARCHAR(50) NOT NULL,
-  resim TEXT,
-  yetenekler JSON,
-  guc INT,
+  resim LONGTEXT,
+  guc INT DEFAULT 0,
+  oyuncu_sabit_guc INT DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-); 
+  updated_at DATETIME
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE oyuncu_ozellikleri (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  oyuncu_id INT NOT NULL,
+  bitiricilik INT DEFAULT 10,
+  dripling INT DEFAULT 10,
+  ilkkontrol INT DEFAULT 10,
+  kafavurusu INT DEFAULT 10,
+  korner INT DEFAULT 10,
+  markaj INT DEFAULT 10,
+  ortayapma INT DEFAULT 10,
+  pas INT DEFAULT 10,
+  penaltikullanma INT DEFAULT 10,
+  serbestvuruskullanma INT DEFAULT 10,
+  teknik INT DEFAULT 10,
+  topkapma INT DEFAULT 10,
+  uzaktansut INT DEFAULT 10,
+  uzuntac INT DEFAULT 10,
+  agresiflik INT DEFAULT 10,
+  cesaret INT DEFAULT 10,
+  caliskanlik INT DEFAULT 10,
+  kararalma INT DEFAULT 10,
+  kararlilik INT DEFAULT 10,
+  konsantrasyon INT DEFAULT 10,
+  liderlik INT DEFAULT 10,
+  onsezi INT DEFAULT 10,
+  ozelyetenek INT DEFAULT 10,
+  pozisyonalma INT DEFAULT 10,
+  sogukkanlilik INT DEFAULT 10,
+  takimoyunu INT DEFAULT 10,
+  topsuzalan INT DEFAULT 10,
+  vizyon INT DEFAULT 10,
+  ceviklik INT DEFAULT 10,
+  dayaniklilik INT DEFAULT 10,
+  denge INT DEFAULT 10,
+  guc INT DEFAULT 10,
+  hiz INT DEFAULT 10,
+  hizlanma INT DEFAULT 10,
+  vucutzindeligi INT DEFAULT 10,
+  ziplama INT DEFAULT 10,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME,
+  FOREIGN KEY (oyuncu_id) REFERENCES oyuncular(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE pozisyonlar (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  oyuncu_id INT NOT NULL,
+  ST INT DEFAULT 1 CHECK (ST BETWEEN 1 AND 5),
+  OOS INT DEFAULT 1 CHECK (OOS BETWEEN 1 AND 5),
+  RW INT DEFAULT 1 CHECK (RW BETWEEN 1 AND 5),
+  LW INT DEFAULT 1 CHECK (LW BETWEEN 1 AND 5),
+  CM INT DEFAULT 1 CHECK (CM BETWEEN 1 AND 5),
+  DM INT DEFAULT 1 CHECK (DM BETWEEN 1 AND 5),
+  DC INT DEFAULT 1 CHECK (DC BETWEEN 1 AND 5),
+  DR INT DEFAULT 1 CHECK (DR BETWEEN 1 AND 5),
+  DL INT DEFAULT 1 CHECK (DL BETWEEN 1 AND 5),
+  GK INT DEFAULT 1 CHECK (GK BETWEEN 1 AND 5),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME,
+  FOREIGN KEY (oyuncu_id) REFERENCES oyuncular(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci; 

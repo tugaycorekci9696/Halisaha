@@ -48,6 +48,7 @@
       variant="outlined"
       density="compact"
       class="mb-4"
+      return-object
     />
     
     <div class="text-h6 mb-4">Pozisyonlar</div>
@@ -108,14 +109,14 @@
         <!-- Orta Saha -->
         <div class="position-row">
           <div class="position-cell">
-            <div class="position-label">MC</div>
+            <div class="position-label">CM</div>
             <VSelect
-              v-model="modelValue.pozisyonlar['MC']"
+              v-model="modelValue.pozisyonlar['CM']"
               :items="pozisyonSeviyeleri"
               density="compact"
               hide-details
               class="position-select"
-              :class="getPozisyonClass(modelValue.pozisyonlar['MC'])"
+              :class="getPozisyonClass(modelValue.pozisyonlar['CM'])"
             />
           </div>
         </div>
@@ -227,7 +228,7 @@
         </VBtn>
         <VBtn
           color="primary"
-          @click="resimKirp"
+          @click="handleCropperSave"
         >
           Kırp
         </VBtn>
@@ -244,9 +245,10 @@ import VueCropper from 'vue-cropperjs'
 
 interface Props {
   modelValue: {
+    id?: number
     adSoyad: string
     resim?: string
-    gruplar: number[]
+    gruplar: Grup[]
     pozisyonlar: { [key: string]: number }
   }
   gruplar: Grup[]
@@ -295,31 +297,45 @@ const resimSec = (event: Event) => {
   }
 }
 
-const resimKirp = () => {
-  if (cropperRef.value) {
-    const canvas = cropperRef.value.getCroppedCanvas({
-      width: 200,
-      height: 200
-    })
-    emit('update:modelValue', {
-      ...props.modelValue,
-      resim: canvas.toDataURL('image/jpeg', 0.8)
-    })
-    showCropper.value = false
-  }
-}
+const handleCropperSave = () => {
+  if (!cropperRef.value) return;
+
+  // Yeni bir canvas oluştur (150x150)
+  const canvas = document.createElement('canvas');
+  canvas.width = 150;
+  canvas.height = 150;
+  const ctx = canvas.getContext('2d');
+
+  // Kırpılmış resmi al
+  const croppedCanvas = cropperRef.value.getCroppedCanvas();
+
+  // Resmi 150x150 boyutuna ölçekle
+  ctx?.drawImage(croppedCanvas, 0, 0, 150, 150);
+
+  // WEBP formatına çevir
+  const base64Image = canvas.toDataURL('image/webp', 0.7);
+  
+  // Modeli güncelle
+  emit('update:modelValue', {
+    ...props.modelValue,
+    resim: base64Image
+  });
+
+  // Dialog'u kapat
+  showCropper.value = false;
+};
 
 const validate = async () => {
   return await formRef.value?.validate()
 }
 
 const initializePozisyonlar = () => {
-  const pozisyonlar = {
+  const pozisyonlar: { [key: string]: number } = {
     ST: 1,
     LW: 1,
     OOS: 1,
     RW: 1,
-    MC: 1,
+    CM: 1,
     DM: 1,
     DL: 1,
     DC: 1,
@@ -328,7 +344,7 @@ const initializePozisyonlar = () => {
   }
 
   if (props.modelValue.pozisyonlar) {
-    Object.keys(pozisyonlar).forEach(key => {
+    Object.entries(pozisyonlar).forEach(([key, _]) => {
       if (props.modelValue.pozisyonlar[key]) {
         pozisyonlar[key] = props.modelValue.pozisyonlar[key]
       }

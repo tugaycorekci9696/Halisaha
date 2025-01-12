@@ -851,17 +851,41 @@ const oyuncuYetenekleriDuzenle = async (oyuncu: Oyuncu) => {
     const ozellikler = await api.getOyuncuOzellikleri()
 
     // Tüm özellikleri döngüye al ve değeri olmayanlara 10 ata
-    const yetenekMap = yetenekler.reduce((acc: { [key: number]: number }, yetenek: OyuncuYetenek) => {
-      acc[yetenek.ozellik_id] = yetenek.seviye
-      return acc
-    }, {})
-
-    // Eksik özelliklere varsayılan değer ata
+    const yetenekMap = {}
+    
+    // Her özellik için varsayılan değer ata
     ozellikler.forEach(ozellik => {
-      if (!(ozellik.id in yetenekMap)) {
-        yetenekMap[ozellik.id] = 10
-      }
+      yetenekMap[ozellik.id] = 10
     })
+
+    // Mevcut yetenekleri ekle
+    if (yetenekler && typeof yetenekler === 'object') {
+      Object.entries(yetenekler).forEach(([key, value]) => {
+        // Özellik ID'sini bul
+        const ozellik = ozellikler.find(o => {
+          const columnName = o.isim
+            .toLowerCase()
+            .replace(/\s+/g, '')
+            .replace(/ı/g, 'i')
+            .replace(/ğ/g, 'g')
+            .replace(/ü/g, 'u')
+            .replace(/ş/g, 's')
+            .replace(/ö/g, 'o')
+            .replace(/ç/g, 'c')
+            .replace(/İ/g, 'i')
+            .replace(/Ğ/g, 'g')
+            .replace(/Ü/g, 'u')
+            .replace(/Ş/g, 's')
+            .replace(/Ö/g, 'o')
+            .replace(/Ç/g, 'c')
+          return columnName === key
+        })
+        
+        if (ozellik) {
+          yetenekMap[ozellik.id] = value
+        }
+      })
+    }
 
     oyuncuYetenekleriDialog.value = {
       show: true,
