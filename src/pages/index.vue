@@ -92,7 +92,7 @@
                          :data-seviye="takimA.oyuncular.ST[i-1].pozisyonlar?.ST || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', 'ST', i-1)">
-                      <div class="guc-badge">
+                      <div class="guc-badge" :data-guc="getGucSeviyesi(getOyuncuGucu(takimA.oyuncular.ST[i-1]?.id, 'ST'))">
                         {{ getOyuncuGucu(takimA.oyuncular.ST[i-1]?.id, 'ST') }}
                       </div>
                       <VAvatar class="player-avatar">
@@ -121,7 +121,7 @@
                          :data-seviye="takimA.oyuncular[pos][index].pozisyonlar?.[pos as MevkiKodu] || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', pos, index)">
-                      <div class="guc-badge">
+                      <div class="guc-badge" :data-guc="getGucSeviyesi(getOyuncuGucu(takimA.oyuncular[pos][index]?.id, pos))">
                         {{ getOyuncuGucu(takimA.oyuncular[pos][index]?.id, pos) }}
                       </div>
                       <VAvatar class="player-avatar">
@@ -145,7 +145,7 @@
                          :data-seviye="takimA.oyuncular[pos][index+4].pozisyonlar?.[pos as MevkiKodu] || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', pos, index+4)">
-                      <div class="guc-badge">
+                      <div class="guc-badge" :data-guc="getGucSeviyesi(getOyuncuGucu(takimA.oyuncular[pos][index+4]?.id, pos))">
                         {{ getOyuncuGucu(takimA.oyuncular[pos][index+4]?.id, pos) }}
                       </div>
                       <VAvatar class="player-avatar">
@@ -169,7 +169,7 @@
                          :data-seviye="takimA.oyuncular[pos][index+8].pozisyonlar?.[pos as MevkiKodu] || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', pos, index+8)">
-                      <div class="guc-badge">
+                      <div class="guc-badge" :data-guc="getGucSeviyesi(getOyuncuGucu(takimA.oyuncular[pos][index+8]?.id, pos))">
                         {{ getOyuncuGucu(takimA.oyuncular[pos][index+8]?.id, pos) }}
                       </div>
                       <VAvatar class="player-avatar">
@@ -197,7 +197,7 @@
                          :data-seviye="takimA.oyuncular[pos][index].pozisyonlar?.[pos as MevkiKodu] || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', pos, index)">
-                      <div class="guc-badge">
+                      <div class="guc-badge" :data-guc="getGucSeviyesi(getOyuncuGucu(takimA.oyuncular[pos][index]?.id, pos))">
                         {{ getOyuncuGucu(takimA.oyuncular[pos][index]?.id, pos) }}
                       </div>
                       <VAvatar class="player-avatar">
@@ -223,7 +223,7 @@
                        :data-seviye="takimA.oyuncular.GK[0].pozisyonlar?.GK || 1"
                        draggable="true"
                        @dragstart="dragStartPozisyon($event, 'A', 'GK', 0)">
-                    <div class="guc-badge">
+                    <div class="guc-badge" :data-guc="getGucSeviyesi(getOyuncuGucu(takimA.oyuncular.GK[0]?.id, 'GK'))">
                       {{ getOyuncuGucu(takimA.oyuncular.GK[0]?.id, 'GK') }}
                     </div>
                     <VAvatar class="player-avatar">
@@ -625,6 +625,15 @@ function getOyuncuGucu(oyuncuId: number | undefined, pozisyon: string): number {
   return oyuncuGuc[pozisyon] || 0;
 }
 
+// Güç seviyesini hesaplayan fonksiyon
+function getGucSeviyesi(guc: number): number {
+  if (guc <= 45) return Math.floor(guc / 15); // 0-3 arası
+  if (guc <= 55) return 4;
+  if (guc <= 70) return 5;
+  if (guc <= 85) return 6;
+  return Math.min(10, Math.floor(guc / 10)); // 7-10 arası
+}
+
 onMounted(async () => {
   await Promise.all([
     oyunculariYukle(),
@@ -857,8 +866,6 @@ onMounted(async () => {
   position: absolute;
   top: 4px;
   right: 4px;
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
   border-radius: 12px;
   padding: 2px 6px;
   font-size: 0.7rem;
@@ -866,5 +873,34 @@ onMounted(async () => {
   min-width: 20px;
   text-align: center;
   z-index: 1;
+  color: white;
+}
+
+/* Güç değer aralıklarına göre renkler */
+.guc-badge[data-guc="0"],
+.guc-badge[data-guc="1"],
+.guc-badge[data-guc="2"],
+.guc-badge[data-guc="3"] {
+  background: #F44336; /* Kırmızı (0-45) */
+}
+
+.guc-badge[data-guc="4"] {
+  background: #FFEB3B; /* Sarı (45-55) */
+  color: black;
+}
+
+.guc-badge[data-guc="5"] {
+  background: #FF9800; /* Turuncu (55-70) */
+}
+
+.guc-badge[data-guc="6"] {
+  background: #4CAF50; /* Yeşil (70-85) */
+}
+
+.guc-badge[data-guc="7"],
+.guc-badge[data-guc="8"],
+.guc-badge[data-guc="9"],
+.guc-badge[data-guc="10"] {
+  background: #1976D2; /* Koyu Mavi (85-100) */
 }
 </style>
