@@ -968,7 +968,6 @@ onMounted(() => {
   gruplariYukle()
 })
 </script>
-
 <style scoped>
 .oyuncu-listesi-item {
   padding: 8px 16px;
@@ -1436,3 +1435,4 @@ onMounted(() => {
   }
 }
 </style>
+

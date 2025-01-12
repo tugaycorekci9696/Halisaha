@@ -98,6 +98,19 @@ export const updateOyuncuYetenekleri = async (oyuncuId: number, yetenekler: Oyun
   await axios.put(`${API_URL}/oyuncular/${oyuncuId}/yetenekler`, { yetenekler });
 };
 
+// Yeni fonksiyonlar
+export const executeQueryById = async (oyuncuId: number, q_id: number): Promise<number> => {
+  const response = await axios.post(`${API_URL}/execute-query`, { oyuncuId, q_id });
+  return response.data.result;
+};
+
+export const updateYeniPozisyonlar = async (oyuncuId: number, pozisyonlar: { [key: string]: number }): Promise<any> => {
+  console.log('API - updateYeniPozisyonlar çağrıldı:', { oyuncuId, pozisyonlar });
+  const response = await axios.put(`${API_URL}/yeni-pozisyonlar/${oyuncuId}`, pozisyonlar);
+  console.log('API - updateYeniPozisyonlar yanıtı:', response.data);
+  return response.data;
+};
+
 export interface Api {
   getOyuncular(): Promise<Oyuncu[]>
   createOyuncu(oyuncu: Omit<Oyuncu, 'id'>): Promise<Oyuncu>
@@ -112,6 +125,8 @@ export interface Api {
   getOyuncuYetenekleri(oyuncuId: number): Promise<OyuncuYetenek[]>
   updateOyuncuYetenekleri(oyuncuId: number, yetenekler: OyuncuYetenek[]): Promise<void>
   getMevkiKatsayilari(mevki: string): Promise<MevkiKatsayi[]>
+  executeQueryById(oyuncuId: number, q_id: number): Promise<number>
+  updateYeniPozisyonlar(oyuncuId: number, pozisyonlar: { [key: string]: number }): Promise<any>
 }
 
 const api: Api = {
@@ -211,6 +226,24 @@ const api: Api = {
     const response = await fetch(`${API_URL}/mevki-katsayilari/${mevki}`)
     if (!response.ok) throw new Error('Mevki katsayıları alınamadı')
     return response.json()
+  },
+  async executeQueryById(oyuncuId: number, q_id: number): Promise<number> {
+    const response = await fetch(`${API_URL}/execute-query`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ oyuncuId, q_id })
+    })
+    if (!response.ok) throw new Error('Query çalıştırılamadı')
+    const data = await response.json()
+    return data.result
+  },
+  async updateYeniPozisyonlar(oyuncuId: number, pozisyonlar: { [key: string]: number }): Promise<any> {
+    console.log('API - updateYeniPozisyonlar çağrıldı:', { oyuncuId, pozisyonlar });
+    const response = await axios.put(`${API_URL}/yeni-pozisyonlar/${oyuncuId}`, pozisyonlar);
+    console.log('API - updateYeniPozisyonlar yanıtı:', response.data);
+    return response.data;
   }
 }
 
@@ -227,5 +260,7 @@ export default {
   getOyuncuOzellikleri,
   getOyuncuYetenekleri,
   updateOyuncuYetenekleri,
+  executeQueryById,
+  updateYeniPozisyonlar,
   getMevkiKatsayilari: api.getMevkiKatsayilari
 }; 

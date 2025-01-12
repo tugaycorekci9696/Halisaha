@@ -833,6 +833,98 @@ app.post('/api/oyuncular/:id/resim', upload.single('resim'), async (req, res) =>
 // Statik dosya sunucusu
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
+// Query çalıştırma endpoint'i
+app.post('/api/execute-query', async (req, res) => {
+  try {
+    const { oyuncuId, q_id } = req.body;
+
+    // Query'i al
+    const [[queryData]] = await db.query('SELECT q_query FROM queryler WHERE q_id = ?', [q_id]);
+    
+    if (!queryData || !queryData.q_query) {
+      return res.status(404).json({ error: 'Query bulunamadı' });
+    }
+
+    // Query'deki @oyuncu_id'yi gerçek ID ile değiştir
+    const modifiedQuery = queryData.q_query.replace(/@oyuncu_id/g, oyuncuId.toString());
+
+    // Query'i çalıştır
+    const [result] = await db.query(modifiedQuery);
+    
+    if (!result[0]?.MevkiGucDegerleri) {
+      return res.json({ result: 0 });
+    }
+
+    // MevkiGucDegerleri'nden sayı değerini çıkar (örn: "GK: 17" -> 17)
+    const deger = result[0].MevkiGucDegerleri.split(':')[1].trim();
+    const mevkiDegeri = parseInt(deger) || 0;
+    
+    res.json({ result: mevkiDegeri });
+  } catch (error) {
+    console.error('Query çalıştırılırken hata:', error);
+    res.status(500).json({ error: 'Query çalıştırılırken hata oluştu' });
+  }
+});
+
+// Yeni pozisyonları güncelle
+app.put('/api/yeni-pozisyonlar/:oyuncuId', async (req, res) => {
+  try {
+    const { oyuncuId } = req.params;
+    const pozisyonlar = req.body;
+
+    console.log('Gelen oyuncuId:', oyuncuId);
+    console.log('Gelen pozisyonlar:', pozisyonlar);
+
+    // Önce mevcut kaydı kontrol et
+    const [[existing]] = await db.query(
+      'SELECT * FROM yeni_pozisyonlar WHERE oyuncu_id = ?',
+      [oyuncuId]
+    );
+
+    console.log('Mevcut kayıt:', existing);
+
+    if (existing) {
+      // Güncelle
+      const updatePairs = Object.entries(pozisyonlar)
+        .filter(([_, value]) => value !== undefined && value !== null)
+        .map(([key, value]) => `${key} = ${value}`);
+
+      if (updatePairs.length > 0) {
+        const updateQuery = `UPDATE yeni_pozisyonlar SET ${updatePairs.join(', ')} WHERE oyuncu_id = ?`;
+        console.log('UPDATE Sorgusu:', updateQuery);
+        
+        const [updateResult] = await db.query(updateQuery, [oyuncuId]);
+        console.log('UPDATE Sonucu:', updateResult);
+      }
+    } else {
+      // Yeni kayıt ekle
+      const columns = ['oyuncu_id', ...Object.keys(pozisyonlar)];
+      const values = [oyuncuId, ...Object.values(pozisyonlar)];
+      const placeholders = Array(values.length).fill('?').join(',');
+
+      const insertQuery = `INSERT INTO yeni_pozisyonlar (${columns.join(',')}) VALUES (${placeholders})`;
+      console.log('INSERT Sorgusu:', insertQuery);
+      console.log('INSERT Değerleri:', values);
+
+      const [insertResult] = await db.query(insertQuery, values);
+      console.log('INSERT Sonucu:', insertResult);
+    }
+
+    // Kontrol amaçlı son durumu oku
+    const [[final]] = await db.query(
+      'SELECT * FROM yeni_pozisyonlar WHERE oyuncu_id = ?',
+      [oyuncuId]
+    );
+    console.log('Son durum:', final);
+
+    res.json({ success: true, data: final });
+  } catch (error) {
+    console.error('Yeni pozisyonlar güncellenirken hata:', error);
+    console.error('Hata detayı:', error.message);
+    res.status(500).json({ error: 'Yeni pozisyonlar güncellenirken hata oluştu' });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server http://localhost:${port} adresinde çalışıyor`);
 }); 

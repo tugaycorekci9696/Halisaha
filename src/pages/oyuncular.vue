@@ -928,11 +928,50 @@ const kaydetYetenekler = async () => {
     // Yetenekleri API'ye gönder
     await api.updateOyuncuYetenekleri(oyuncuId, yeteneklerArray)
 
+    // Her mevki için query'i çalıştır
+    const mevkiQueryMap = [
+      { q_id: 1, column: 'ST' },
+      { q_id: 2, column: 'OS' },
+      { q_id: 3, column: 'RW' },
+      { q_id: 4, column: 'LW' },
+      { q_id: 5, column: 'CM' },
+      { q_id: 6, column: 'DM' },
+      { q_id: 7, column: 'DC' },
+      { q_id: 8, column: 'DR' },
+      { q_id: 9, column: 'DL' },
+      { q_id: 10, column: 'GK' }
+    ]
+
+    // Tüm mevkilerin sonuçlarını topla
+    const pozisyonlar: { [key: string]: number } = {}
+    
+    for (const { q_id, column } of mevkiQueryMap) {
+      try {
+        console.log(`${column} için query çalıştırılıyor (q_id: ${q_id})...`)
+        const response = await api.executeQueryById(oyuncuId, q_id)
+        console.log(`${column} query sonucu:`, response)
+        
+        // Direkt olarak sayısal değeri al
+        pozisyonlar[column] = response
+      } catch (error) {
+        console.error(`${column} pozisyonu için query çalıştırılırken hata:`, error)
+      }
+    }
+
+    console.log('Toplanmış pozisyonlar:', pozisyonlar)
+
+    // Eğer pozisyonlar boş değilse güncelle
+    if (Object.keys(pozisyonlar).length > 0) {
+      console.log('Pozisyonlar güncelleniyor...')
+      const updateResponse = await api.updateYeniPozisyonlar(oyuncuId, pozisyonlar)
+      console.log('Güncelleme sonucu:', updateResponse)
+    }
+
     // Oyuncular listesini güncelle
     await oyunculariYukle()
 
     oyuncuYetenekleriDialog.value.show = false
-    showToast('Yetenekler başarıyla kaydedildi', 'success')
+    showToast('Yetenekler ve pozisyonlar başarıyla güncellendi', 'success')
   } catch (error) {
     console.error('Yetenekler kaydedilirken hata:', error)
     showToast('Yetenekler kaydedilirken bir hata oluştu', 'error')
