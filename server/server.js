@@ -72,6 +72,34 @@ const initializeDatabase = async () => {
       }
     }
 
+    // yeni_pozisyonlar tablosunu oluştur ve güncelle
+    try {
+      // Önce tabloyu oluştur
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS yeni_pozisyonlar (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          oyuncu_id INT NOT NULL,
+          ST INT DEFAULT 1,
+          OOS INT DEFAULT 1,
+          RW INT DEFAULT 1,
+          LW INT DEFAULT 1,
+          CM INT DEFAULT 1,
+          DM INT DEFAULT 1,
+          DC INT DEFAULT 1,
+          DR INT DEFAULT 1,
+          DL INT DEFAULT 1,
+          GK INT DEFAULT 1,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME,
+          FOREIGN KEY (oyuncu_id) REFERENCES oyuncular(id) ON DELETE CASCADE
+        )
+      `);
+      console.log('yeni_pozisyonlar tablosu oluşturuldu');
+    } catch (error) {
+      console.error('yeni_pozisyonlar tablosu işlemleri sırasında hata:', error);
+      throw error;
+    }
+
     console.log('Veritabanı başarıyla güncellendi');
   } catch (error) {
     console.error('Veritabanı güncellenirken hata:', error);
@@ -875,6 +903,20 @@ app.put('/api/yeni-pozisyonlar/:oyuncuId', async (req, res) => {
     console.log('Gelen oyuncuId:', oyuncuId);
     console.log('Gelen pozisyonlar:', pozisyonlar);
 
+    // Pozisyon adlarını düzelt
+    const pozisyonMapping = {
+      'OS': 'OOS'  // OS -> OOS dönüşümü
+    };
+
+    // Pozisyon değerlerini doğrula ve düzelt
+    const duzeltilmisPozisyonlar = {};
+    Object.entries(pozisyonlar).forEach(([key, value]) => {
+      const yeniKey = pozisyonMapping[key] || key;
+      // Değeri sayıya çevir ve sınırla (1-100 arası)
+      const yeniValue = Math.max(1, Math.min(100, parseInt(value) || 1));
+      duzeltilmisPozisyonlar[yeniKey] = yeniValue;
+    });
+
     // Önce mevcut kaydı kontrol et
     const [[existing]] = await db.query(
       'SELECT * FROM yeni_pozisyonlar WHERE oyuncu_id = ?',
@@ -885,43 +927,87 @@ app.put('/api/yeni-pozisyonlar/:oyuncuId', async (req, res) => {
 
     if (existing) {
       // Güncelle
-      const updatePairs = Object.entries(pozisyonlar)
-        .filter(([_, value]) => value !== undefined && value !== null)
-        .map(([key, value]) => `${key} = ${value}`);
+      const updatePairs = Object.entries(duzeltilmisPozisyonlar)
+        .filter(([key, value]) => value !== undefined && value !== null)
+        .map(([key, value]) => `${key} = ?`);
 
       if (updatePairs.length > 0) {
-        const updateQuery = `UPDATE yeni_pozisyonlar SET ${updatePairs.join(', ')} WHERE oyuncu_id = ?`;
-        console.log('UPDATE Sorgusu:', updateQuery);
+        const updateQuery = `UPDATE yeni_pozisyonlar SET ${updatePairs.map(pair => pair).join(', ')} WHERE oyuncu_id = ?`;
+        const updateValues = [
+          ...Object.entries(duzeltilmisPozisyonlar)
+            .filter(([key, value]) => value !== undefined && value !== null)
+            .map(([key, value]) => value),
+          oyuncuId
+        ];
         
-        const [updateResult] = await db.query(updateQuery, [oyuncuId]);
-        console.log('UPDATE Sonucu:', updateResult);
+        console.log('UPDATE Sorgusu:', updateQuery);
+        console.log('UPDATE Değerleri:', updateValues);
+        
+        await db.query(updateQuery, updateValues);
       }
     } else {
       // Yeni kayıt ekle
-      const columns = ['oyuncu_id', ...Object.keys(pozisyonlar)];
-      const values = [oyuncuId, ...Object.values(pozisyonlar)];
-      const placeholders = Array(values.length).fill('?').join(',');
+      const columns = ['oyuncu_id'];
+      const values = [oyuncuId];
+      const placeholders = ['?'];
 
-      const insertQuery = `INSERT INTO yeni_pozisyonlar (${columns.join(',')}) VALUES (${placeholders})`;
+      Object.entries(duzeltilmisPozisyonlar).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          columns.push(key);
+          values.push(value);
+          placeholders.push('?');
+        }
+      });
+
+      const insertQuery = `INSERT INTO yeni_pozisyonlar (${columns.join(',')}) VALUES (${placeholders.join(',')})`;
       console.log('INSERT Sorgusu:', insertQuery);
       console.log('INSERT Değerleri:', values);
 
-      const [insertResult] = await db.query(insertQuery, values);
-      console.log('INSERT Sonucu:', insertResult);
+      await db.query(insertQuery, values);
     }
 
-    // Kontrol amaçlı son durumu oku
-    const [[final]] = await db.query(
+    // Güncellenmiş veriyi getir
+    const [[updated]] = await db.query(
       'SELECT * FROM yeni_pozisyonlar WHERE oyuncu_id = ?',
       [oyuncuId]
     );
-    console.log('Son durum:', final);
 
-    res.json({ success: true, data: final });
+    // id ve oyuncu_id alanlarını çıkar
+    if (updated) {
+      const { id, oyuncu_id, created_at, updated_at, ...pozisyonDegerleri } = updated;
+      res.json(pozisyonDegerleri);
+    } else {
+      res.json({});
+    }
   } catch (error) {
     console.error('Yeni pozisyonlar güncellenirken hata:', error);
     console.error('Hata detayı:', error.message);
     res.status(500).json({ error: 'Yeni pozisyonlar güncellenirken hata oluştu' });
+  }
+});
+
+// Oyuncunun yeni pozisyonlarını getir
+app.get('/api/yeni-pozisyonlar/:oyuncuId', async (req, res) => {
+  try {
+    const { oyuncuId } = req.params;
+    
+    // Pozisyonları getir
+    const [[pozisyonlar]] = await db.query(
+      'SELECT * FROM yeni_pozisyonlar WHERE oyuncu_id = ?',
+      [oyuncuId]
+    );
+
+    if (!pozisyonlar) {
+      return res.json({});
+    }
+
+    // id ve oyuncu_id alanlarını çıkar
+    const { id, oyuncu_id, created_at, updated_at, ...pozisyonDegerleri } = pozisyonlar;
+    
+    res.json(pozisyonDegerleri);
+  } catch (error) {
+    console.error('Yeni pozisyonlar getirilirken hata:', error);
+    res.status(500).json({ error: 'Yeni pozisyonlar getirilirken hata oluştu' });
   }
 });
 

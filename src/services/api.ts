@@ -244,6 +244,17 @@ const api: Api = {
     const response = await axios.put(`${API_URL}/yeni-pozisyonlar/${oyuncuId}`, pozisyonlar);
     console.log('API - updateYeniPozisyonlar yanıtı:', response.data);
     return response.data;
+  },
+  async getYeniPozisyonlar(oyuncuId: number): Promise<{ [key: string]: number }> {
+    console.log('API - getYeniPozisyonlar çağrıldı:', { oyuncuId });
+    try {
+      const response = await axios.get(`${API_URL}/yeni-pozisyonlar/${oyuncuId}`);
+      console.log('API - getYeniPozisyonlar yanıtı:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('API - getYeniPozisyonlar hatası:', error);
+      return {};
+    }
   }
 }
 
@@ -262,5 +273,6 @@ export default {
   updateOyuncuYetenekleri,
   executeQueryById,
   updateYeniPozisyonlar,
-  getMevkiKatsayilari: api.getMevkiKatsayilari
+  getMevkiKatsayilari: api.getMevkiKatsayilari,
+  getYeniPozisyonlar: api.getYeniPozisyonlar
 }; 

@@ -92,11 +92,14 @@
                          :data-seviye="takimA.oyuncular.ST[i-1].pozisyonlar?.ST || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', 'ST', i-1)">
-                      <VAvatar size="40" class="player-avatar">
+                      <div class="guc-badge">
+                        {{ getOyuncuGucu(takimA.oyuncular.ST[i-1]?.id, 'ST') }}
+                      </div>
+                      <VAvatar class="player-avatar">
                         <VImg v-if="takimA.oyuncular.ST[i-1].resim" :src="takimA.oyuncular.ST[i-1].resim" />
                         <VIcon v-else icon="tabler-user" />
                       </VAvatar>
-                      <span class="player-name">{{ takimA.oyuncular.ST[i-1].adSoyad }}</span>
+                      <div class="player-name">{{ getIlkIsim(takimA.oyuncular.ST[i-1].adSoyad) }}</div>
                     </div>
                     <div v-else class="empty-slot">
                       <span class="position-text">ST</span>
@@ -118,11 +121,14 @@
                          :data-seviye="takimA.oyuncular[pos][index].pozisyonlar?.[pos as MevkiKodu] || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', pos, index)">
-                      <VAvatar size="40" class="player-avatar">
+                      <div class="guc-badge">
+                        {{ getOyuncuGucu(takimA.oyuncular[pos][index]?.id, pos) }}
+                      </div>
+                      <VAvatar class="player-avatar">
                         <VImg v-if="takimA.oyuncular[pos][index].resim" :src="takimA.oyuncular[pos][index].resim" />
                         <VIcon v-else icon="tabler-user" />
                       </VAvatar>
-                      <span class="player-name">{{ takimA.oyuncular[pos][index].adSoyad }}</span>
+                      <div class="player-name">{{ getIlkIsim(takimA.oyuncular[pos][index].adSoyad) }}</div>
                     </div>
                     <div v-else class="empty-slot">
                       <span class="position-text">{{ pos }}</span>
@@ -139,11 +145,14 @@
                          :data-seviye="takimA.oyuncular[pos][index+4].pozisyonlar?.[pos as MevkiKodu] || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', pos, index+4)">
-                      <VAvatar size="40" class="player-avatar">
+                      <div class="guc-badge">
+                        {{ getOyuncuGucu(takimA.oyuncular[pos][index+4]?.id, pos) }}
+                      </div>
+                      <VAvatar class="player-avatar">
                         <VImg v-if="takimA.oyuncular[pos][index+4].resim" :src="takimA.oyuncular[pos][index+4].resim" />
                         <VIcon v-else icon="tabler-user" />
                       </VAvatar>
-                      <span class="player-name">{{ takimA.oyuncular[pos][index+4].adSoyad }}</span>
+                      <div class="player-name">{{ getIlkIsim(takimA.oyuncular[pos][index+4].adSoyad) }}</div>
                     </div>
                     <div v-else class="empty-slot">
                       <span class="position-text">{{ pos }}</span>
@@ -160,11 +169,14 @@
                          :data-seviye="takimA.oyuncular[pos][index+8].pozisyonlar?.[pos as MevkiKodu] || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', pos, index+8)">
-                      <VAvatar size="40" class="player-avatar">
+                      <div class="guc-badge">
+                        {{ getOyuncuGucu(takimA.oyuncular[pos][index+8]?.id, pos) }}
+                      </div>
+                      <VAvatar class="player-avatar">
                         <VImg v-if="takimA.oyuncular[pos][index+8].resim" :src="takimA.oyuncular[pos][index+8].resim" />
                         <VIcon v-else icon="tabler-user" />
                       </VAvatar>
-                      <span class="player-name">{{ takimA.oyuncular[pos][index+8].adSoyad }}</span>
+                      <div class="player-name">{{ getIlkIsim(takimA.oyuncular[pos][index+8].adSoyad) }}</div>
                     </div>
                     <div v-else class="empty-slot">
                       <span class="position-text">{{ pos }}</span>
@@ -185,11 +197,14 @@
                          :data-seviye="takimA.oyuncular[pos][index].pozisyonlar?.[pos as MevkiKodu] || 1"
                          draggable="true"
                          @dragstart="dragStartPozisyon($event, 'A', pos, index)">
-                      <VAvatar size="40" class="player-avatar">
+                      <div class="guc-badge">
+                        {{ getOyuncuGucu(takimA.oyuncular[pos][index]?.id, pos) }}
+                      </div>
+                      <VAvatar class="player-avatar">
                         <VImg v-if="takimA.oyuncular[pos][index].resim" :src="takimA.oyuncular[pos][index].resim" />
                         <VIcon v-else icon="tabler-user" />
                       </VAvatar>
-                      <span class="player-name">{{ takimA.oyuncular[pos][index].adSoyad }}</span>
+                      <div class="player-name">{{ getIlkIsim(takimA.oyuncular[pos][index].adSoyad) }}</div>
                     </div>
                     <div v-else class="empty-slot">
                       <span class="position-text">{{ pos }}</span>
@@ -208,11 +223,14 @@
                        :data-seviye="takimA.oyuncular.GK[0].pozisyonlar?.GK || 1"
                        draggable="true"
                        @dragstart="dragStartPozisyon($event, 'A', 'GK', 0)">
-                    <VAvatar size="40" class="player-avatar">
+                    <div class="guc-badge">
+                      {{ getOyuncuGucu(takimA.oyuncular.GK[0]?.id, 'GK') }}
+                    </div>
+                    <VAvatar class="player-avatar">
                       <VImg v-if="takimA.oyuncular.GK[0].resim" :src="takimA.oyuncular.GK[0].resim" />
                       <VIcon v-else icon="tabler-user" />
                     </VAvatar>
-                    <span class="player-name">{{ takimA.oyuncular.GK[0].adSoyad }}</span>
+                    <div class="player-name">{{ getIlkIsim(takimA.oyuncular.GK[0].adSoyad) }}</div>
                   </div>
                   <div v-else class="empty-slot">
                     <span class="position-text">GK</span>
@@ -283,6 +301,12 @@ interface Formasyon {
 interface Pozisyon {
   kod: string
   isim: string
+}
+
+interface OyuncuGucleri {
+  [key: number]: {
+    [key: string]: number;
+  };
 }
 
 const havuzdakiOyuncular = ref<Oyuncu[]>([])
@@ -420,6 +444,8 @@ const dropOnArea = async (event: DragEvent, takimKodu: 'A' | 'B', pozisyon: Pozi
   const kaynakPozisyon = event.dataTransfer.getData('kaynakPozisyon') as keyof Pozisyonlar;
   const kaynakIndex = event.dataTransfer.getData('kaynakIndex');
 
+  console.log('Drop işlemi başladı:', { oyuncuId, pozisyon, takimKodu, hedefIndex });
+
   if (!oyuncuId) return;
 
   let oyuncu: Oyuncu | null = null;
@@ -459,6 +485,10 @@ const dropOnArea = async (event: DragEvent, takimKodu: 'A' | 'B', pozisyon: Pozi
 
   // Yeni pozisyona ekle
   hedefTakim.value.oyuncular[pozisyon][hedefIndex] = oyuncu;
+  
+  // Güç değerini güncelle
+  console.log('Güç değeri güncellenecek:', { oyuncuId: oyuncu.id, pozisyon });
+  await updateOyuncuGucu(oyuncu.id, pozisyon);
   
   // Vurgulamaları kaldır
   removeHighlights();
@@ -545,6 +575,54 @@ const getPozisyonAciklama = (pozisyon: string, seviye: number) => {
 const showToast = (message: string, type: 'success' | 'error' = 'success') => {
   // Toast gösterme fonksiyonu
   console.log(`[${type}] ${message}`)
+}
+
+const oyuncuGucleri = ref<OyuncuGucleri>({});
+
+// Kaleci gücünü hesaplayan computed property
+const kaleciGucu = computed(() => {
+  const kaleci = takimA.value.oyuncular.GK[0];
+  if (!kaleci?.id) return 0;
+  const gucler = oyuncuGucleri.value[kaleci.id as keyof OyuncuGucleri];
+  if (!gucler) return 0;
+  return gucler.GK || 0;
+});
+
+async function updateOyuncuGucu(oyuncuId: number, pozisyon: string) {
+  console.log('Güç değeri güncelleniyor:', { oyuncuId, pozisyon });
+  try {
+    const pozisyonlar = await api.getYeniPozisyonlar(oyuncuId);
+    console.log('Pozisyonlar alındı:', pozisyonlar);
+    
+    if (!oyuncuGucleri.value[oyuncuId]) {
+      oyuncuGucleri.value[oyuncuId] = {};
+    }
+    
+    oyuncuGucleri.value[oyuncuId][pozisyon] = pozisyonlar[pozisyon] || 0;
+    console.log('Güç değeri güncellendi:', oyuncuGucleri.value[oyuncuId][pozisyon]);
+  } catch (error) {
+    console.error('Güç değeri alınırken hata:', error);
+    if (!oyuncuGucleri.value[oyuncuId]) {
+      oyuncuGucleri.value[oyuncuId] = {};
+    }
+    oyuncuGucleri.value[oyuncuId][pozisyon] = 0;
+  }
+}
+
+const getOyuncuGucKey = (oyuncuId: number, pozisyon: string) => {
+  return `${oyuncuId}-${pozisyon}`;
+}
+
+const getIlkIsim = (adSoyad: string) => {
+  return adSoyad.split(' ')[0];
+}
+
+// Oyuncu gücünü getiren fonksiyon ekle
+function getOyuncuGucu(oyuncuId: number | undefined, pozisyon: string): number {
+  if (!oyuncuId) return 0;
+  const oyuncuGuc = oyuncuGucleri.value[oyuncuId];
+  if (!oyuncuGuc) return 0;
+  return oyuncuGuc[pozisyon] || 0;
 }
 
 onMounted(async () => {
@@ -773,5 +851,20 @@ onMounted(async () => {
   background: rgba(244, 67, 54, 0.3) !important;
   border-color: rgba(244, 67, 54, 0.9) !important;
   box-shadow: 0 0 15px rgba(244, 67, 54, 0.5);
+}
+
+.guc-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border-radius: 12px;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+  z-index: 1;
 }
 </style>
