@@ -58,6 +58,20 @@ const initializeDatabase = async () => {
       MODIFY COLUMN updated_at DATETIME
     `);
 
+    // Güç kolonunu ekle (eğer yoksa)
+    try {
+      await db.query(`
+        ALTER TABLE oyuncular 
+        ADD COLUMN guc FLOAT DEFAULT 0
+      `);
+      console.log('Güç kolonu eklendi');
+    } catch (error) {
+      // Kolon zaten varsa hata vermesini engelle
+      if (!error.message.includes('Duplicate column name')) {
+        throw error;
+      }
+    }
+
     console.log('Veritabanı başarıyla güncellendi');
   } catch (error) {
     console.error('Veritabanı güncellenirken hata:', error);
@@ -70,14 +84,22 @@ initializeDatabase();
 // Tüm oyuncuları getir
 app.get('/api/oyuncular', async (req, res) => {
   try {
-    // Önce oyuncuları getir
+    // Önce güç hesaplama sorgusunu al
+    const [[gucQuery]] = await db.query('SELECT q_query FROM queryler WHERE q_id = 1');
+    
+    if (!gucQuery || !gucQuery.q_query) {
+      throw new Error('Güç hesaplama sorgusu bulunamadı');
+    }
+
+    // Oyuncuları getir ve güç değerlerini hesapla
     const [oyuncular] = await db.query(`
       SELECT 
         o.id, 
         o.adSoyad,
         o.resim,
         o.created_at,
-        o.updated_at
+        o.updated_at,
+        o.guc
       FROM oyuncular o
       ORDER BY o.id DESC
     `);
@@ -594,6 +616,32 @@ app.put('/api/oyuncular/:id/yetenekler', async (req, res) => {
         console.log('Hatalı yetenek:', yetenek);
       }
     }
+
+    // İlk 10 güç hesaplama sorgusunu al
+    const [gucQueries] = await db.query('SELECT q_query FROM queryler WHERE q_id <= 10 ORDER BY q_id');
+    
+    if (!gucQueries || gucQueries.length === 0) {
+      throw new Error('Güç hesaplama sorguları bulunamadı');
+    }
+
+    // Her sorguyu çalıştır ve güç değerlerini topla
+    let enYuksekGuc = 0;
+    for (const query of gucQueries) {
+      // Sorgu içindeki @oyuncu_id'yi güncelle
+      const modifiedQuery = query.q_query.replace(/@oyuncu_id/g, oyuncuId);
+      const [[gucSonuc]] = await db.query(modifiedQuery);
+      
+      if (gucSonuc && gucSonuc.MevkiGucDegerleri) {
+        // MevkiGucDegerleri'nden sayısal değeri çıkar
+        const gucDegeri = parseFloat(gucSonuc.MevkiGucDegerleri.split(':')[1]);
+        if (!isNaN(gucDegeri) && gucDegeri > enYuksekGuc) {
+          enYuksekGuc = gucDegeri;
+        }
+      }
+    }
+
+    // En yüksek güç değerini kaydet
+    await db.query('UPDATE oyuncular SET guc = ? WHERE id = ?', [enYuksekGuc, oyuncuId]);
 
     res.json({ success: true });
   } catch (error) {
