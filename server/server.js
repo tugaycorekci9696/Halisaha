@@ -1011,6 +1011,97 @@ app.get('/api/yeni-pozisyonlar/:oyuncuId', async (req, res) => {
   }
 });
 
+// Kaleci yeteneklerini getir
+app.get('/api/kaleci-yetenekleri/:oyuncuId', async (req, res) => {
+  const { oyuncuId } = req.params;
+
+  try {
+    const [rows] = await db.query(
+      'SELECT * FROM kaleci_yetenekleri WHERE oyuncu_id = ?',
+      [oyuncuId]
+    );
+
+    if (rows.length === 0) {
+      // Kaleci yetenekleri bulunamadıysa varsayılan değerleri döndür
+      const varsayilanYetenekler = {
+        ani_cikis_egilimi: 1,
+        birebir: 1,
+        degaj: 1,
+        eksantriklik: 1,
+        elle_kontrol: 1,
+        elle_oyun_baslatma: 1,
+        hava_toplari: 1,
+        ilk_kontrol: 1,
+        pas: 1,
+        refleksler: 1,
+        yumrukla_uzaklastirma: 1,
+        agresiflik: 1,
+        cesaret: 1,
+        karar_alma: 1,
+        kararlilik: 1,
+        konsantrasyon: 1,
+        liderlik: 1,
+        onsezi: 1,
+        sogukkanlilik: 1,
+        takim_oyunu: 1
+      };
+      res.json(varsayilanYetenekler);
+    } else {
+      // Veritabanından gelen değerleri döndür
+      const yetenekler = rows[0];
+      delete yetenekler.id;
+      delete yetenekler.oyuncu_id;
+      delete yetenekler.created_at;
+      delete yetenekler.updated_at;
+      res.json(yetenekler);
+    }
+  } catch (error) {
+    console.error('Kaleci yetenekleri alınırken hata:', error);
+    res.status(500).json({ error: 'Kaleci yetenekleri alınamadı' });
+  }
+});
+
+// Kaleci yeteneklerini güncelle/ekle
+app.put('/api/kaleci-yetenekleri/:oyuncuId', async (req, res) => {
+  const { oyuncuId } = req.params;
+  const yetenekler = req.body;
+
+  try {
+    // Mevcut kayıt var mı kontrol et
+    const [rows] = await db.query('SELECT * FROM kaleci_yetenekleri WHERE oyuncu_id = ?', [oyuncuId]);
+
+    // Kaleci gücünü hesapla (özelliklerin ortalaması * 5)
+    const kaleciGucu = Math.round(
+      (Object.values(yetenekler).reduce((sum, value) => sum + value, 0) / Object.keys(yetenekler).length) * 5
+    );
+
+    if (rows.length > 0) {
+      // Güncelle
+      await db.query(
+        'UPDATE kaleci_yetenekleri SET ? WHERE oyuncu_id = ?',
+        [yetenekler, oyuncuId]
+      );
+    } else {
+      // Yeni kayıt ekle
+      await db.query(
+        'INSERT INTO kaleci_yetenekleri SET ?',
+        { ...yetenekler, oyuncu_id: oyuncuId }
+      );
+    }
+
+    // Oyuncunun kaleci gücünü güncelle
+    await db.query(
+      'UPDATE oyuncular SET kaleci_gucu = ? WHERE id = ?',
+      [kaleciGucu, oyuncuId]
+    );
+
+    res.json({ message: 'Kaleci yetenekleri güncellendi', kaleciGucu });
+  } catch (error) {
+    console.error('Kaleci yetenekleri güncellenirken hata:', error);
+    res.status(500).json({ error: 'Kaleci yetenekleri güncellenirken bir hata oluştu' });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server http://localhost:${port} adresinde çalışıyor`);
 }); 

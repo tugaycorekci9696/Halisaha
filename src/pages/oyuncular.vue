@@ -118,6 +118,14 @@
                   </VBtn>
                   <VBtn
                     size="small"
+                    color="success"
+                    @click="kaleciYetenekleriAc(oyuncu)"
+                  >
+                    <VIcon size="small" icon="tabler-soccer-field" class="d-sm-none" />
+                    <span class="d-none d-sm-block">GK</span>
+                  </VBtn>
+                  <VBtn
+                    size="small"
                     color="error"
                     class="flex-grow-0"
                     @click="silOyuncu(oyuncu.id)"
@@ -464,12 +472,98 @@
         </VCardActions>
       </VCard>
     </VDialog>
+
+    <!-- Kaleci Yetenekleri Dialog -->
+    <VDialog v-model="kaleciYetenekleriDialog.show" max-width="800">
+      <VCard v-if="kaleciYetenekleriDialog.oyuncu">
+        <VCardTitle class="text-h5 pa-4">
+          {{ kaleciYetenekleriDialog.oyuncu.adSoyad }} - Kaleci Yetenekleri
+        </VCardTitle>
+        <VCardText>
+          <VRow>
+            <!-- Teknik Özellikler -->
+            <VCol cols="12" md="4">
+              <div class="text-h6 mb-4">Teknik Özellikler</div>
+              <div v-for="yetenek in ['ani_cikis_egilimi', 'birebir', 'degaj', 'elle_kontrol', 'elle_oyun_baslatma', 'hava_toplari', 'refleksler', 'yumrukla_uzaklastirma']" :key="yetenek" class="mb-4">
+                <div class="d-flex align-center justify-space-between mb-1">
+                  <span>{{ formatYetenekAdi(yetenek) }}</span>
+                  <span :class="{'green-text': kaleciYetenekleri[yetenek] >= 15, 'orange-text': kaleciYetenekleri[yetenek] >= 10 && kaleciYetenekleri[yetenek] < 15, 'red-text': kaleciYetenekleri[yetenek] < 10}">
+                    {{ kaleciYetenekleri[yetenek] }}
+                  </span>
+                </div>
+                <VSlider
+                  v-model="kaleciYetenekleri[yetenek]"
+                  :min="0"
+                  :max="20"
+                  :step="1"
+                  :color="kaleciYetenekleri[yetenek] >= 15 ? 'success' : kaleciYetenekleri[yetenek] >= 10 ? 'warning' : 'error'"
+                  thumb-label
+                />
+              </div>
+            </VCol>
+
+            <!-- Mental Özellikler -->
+            <VCol cols="12" md="4">
+              <div class="text-h6 mb-4">Mental Özellikler</div>
+              <div v-for="yetenek in ['agresiflik', 'cesaret', 'karar_alma', 'kararlilik', 'konsantrasyon', 'liderlik', 'onsezi', 'sogukkanlilik']" :key="yetenek" class="mb-4">
+                <div class="d-flex align-center justify-space-between mb-1">
+                  <span>{{ formatYetenekAdi(yetenek) }}</span>
+                  <span :class="{'green-text': kaleciYetenekleri[yetenek] >= 15, 'orange-text': kaleciYetenekleri[yetenek] >= 10 && kaleciYetenekleri[yetenek] < 15, 'red-text': kaleciYetenekleri[yetenek] < 10}">
+                    {{ kaleciYetenekleri[yetenek] }}
+                  </span>
+                </div>
+                <VSlider
+                  v-model="kaleciYetenekleri[yetenek]"
+                  :min="0"
+                  :max="20"
+                  :step="1"
+                  :color="kaleciYetenekleri[yetenek] >= 15 ? 'success' : kaleciYetenekleri[yetenek] >= 10 ? 'warning' : 'error'"
+                  thumb-label
+                />
+              </div>
+            </VCol>
+
+            <!-- Fiziksel Özellikler -->
+            <VCol cols="12" md="4">
+              <div class="text-h6 mb-4">Fiziksel Özellikler</div>
+              <div v-for="yetenek in ['eksantriklik', 'ilk_kontrol', 'pas', 'takim_oyunu']" :key="yetenek" class="mb-4">
+                <div class="d-flex align-center justify-space-between mb-1">
+                  <span>{{ formatYetenekAdi(yetenek) }}</span>
+                  <span :class="{'green-text': kaleciYetenekleri[yetenek] >= 15, 'orange-text': kaleciYetenekleri[yetenek] >= 10 && kaleciYetenekleri[yetenek] < 15, 'red-text': kaleciYetenekleri[yetenek] < 10}">
+                    {{ kaleciYetenekleri[yetenek] }}
+                  </span>
+                </div>
+                <VSlider
+                  v-model="kaleciYetenekleri[yetenek]"
+                  :min="0"
+                  :max="20"
+                  :step="1"
+                  :color="kaleciYetenekleri[yetenek] >= 15 ? 'success' : kaleciYetenekleri[yetenek] >= 10 ? 'warning' : 'error'"
+                  thumb-label
+                />
+              </div>
+            </VCol>
+          </VRow>
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+          <VBtn color="error" @click="kaleciYetenekleriDialog.show = false">İptal</VBtn>
+          <VBtn 
+            color="success" 
+            :loading="kaleciYetenekleriDialog.kaydediliyor"
+            @click="kaleciYetenekleriKaydet"
+          >
+            Kaydet
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import OyuncuForm from '@/components/OyuncuForm.vue'
-import type { Grup } from '@/services/api'
+import type { Grup, KaleciYetenekleri } from '@/services/api'
 import api from '@/services/api'
 import 'cropperjs/dist/cropper.css'
 import { computed, onMounted, ref } from 'vue'
@@ -564,6 +658,77 @@ const cropperRef = ref()
 const cropperImage = ref('')
 
 const fileInput = ref<HTMLInputElement | null>(null)
+
+const kaleciYetenekleriDialog = ref({
+  show: false,
+  oyuncu: null as Oyuncu | null,
+  kaydediliyor: false
+})
+
+const kaleciYetenekleri = ref<KaleciYetenekleri>({
+  ani_cikis_egilimi: 1,
+  birebir: 1,
+  degaj: 1,
+  eksantriklik: 1,
+  elle_kontrol: 1,
+  elle_oyun_baslatma: 1,
+  hava_toplari: 1,
+  ilk_kontrol: 1,
+  pas: 1,
+  refleksler: 1,
+  yumrukla_uzaklastirma: 1,
+  agresiflik: 1,
+  cesaret: 1,
+  karar_alma: 1,
+  kararlilik: 1,
+  konsantrasyon: 1,
+  liderlik: 1,
+  onsezi: 1,
+  sogukkanlilik: 1,
+  takim_oyunu: 1
+})
+
+const kaleciYetenekleriAc = async (oyuncu: Oyuncu) => {
+  kaleciYetenekleriDialog.value.oyuncu = oyuncu
+  kaleciYetenekleriDialog.value.show = true
+
+  try {
+    const yetenekler = await api.getKaleciYetenekleri(oyuncu.id)
+    Object.assign(kaleciYetenekleri.value, yetenekler)
+  } catch (error) {
+    console.error('Kaleci yetenekleri yüklenirken hata:', error)
+    showToast('Kaleci yetenekleri yüklenemedi', 'error')
+  }
+}
+
+const formatYetenekAdi = (key: string) => {
+  return key
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
+
+const kaleciYetenekleriKaydet = async () => {
+  if (!kaleciYetenekleriDialog.value.oyuncu) return
+
+  try {
+    kaleciYetenekleriDialog.value.kaydediliyor = true
+    const { kaleciGucu } = await api.updateKaleciYetenekleri(
+      kaleciYetenekleriDialog.value.oyuncu.id, 
+      kaleciYetenekleri.value
+    )
+    
+    kaleciYetenekleriDialog.value.oyuncu.kaleci_gucu = kaleciGucu
+    kaleciYetenekleriDialog.value.show = false
+    showToast('Kaleci yetenekleri güncellendi')
+    await oyunculariYukle()
+  } catch (error) {
+    console.error('Kaleci yetenekleri kaydedilirken hata:', error)
+    showToast('Kaleci yetenekleri kaydedilemedi', 'error')
+  } finally {
+    kaleciYetenekleriDialog.value.kaydediliyor = false
+  }
+}
 
 // Oyuncuları yükle
 const oyunculariYukle = async () => {
@@ -1235,5 +1400,15 @@ onMounted(() => {
   .position-label {
     font-size: 0.7rem;
   }
+}
+
+.green-text {
+  color: rgb(76, 175, 80);
+}
+.orange-text {
+  color: rgb(255, 152, 0);
+}
+.red-text {
+  color: rgb(244, 67, 54);
 }
 </style> 

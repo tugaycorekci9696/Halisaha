@@ -39,6 +39,29 @@ export interface MevkiKatsayi {
   toplam_katsayi: number
 }
 
+export interface KaleciYetenekleri {
+  ani_cikis_egilimi: number;
+  birebir: number;
+  degaj: number;
+  eksantriklik: number;
+  elle_kontrol: number;
+  elle_oyun_baslatma: number;
+  hava_toplari: number;
+  ilk_kontrol: number;
+  pas: number;
+  refleksler: number;
+  yumrukla_uzaklastirma: number;
+  agresiflik: number;
+  cesaret: number;
+  karar_alma: number;
+  kararlilik: number;
+  konsantrasyon: number;
+  liderlik: number;
+  onsezi: number;
+  sogukkanlilik: number;
+  takim_oyunu: number;
+}
+
 // Oyuncular
 export const getOyuncular = async (): Promise<Oyuncu[]> => {
   const response = await axios.get(`${API_URL}/oyuncular`);
@@ -111,6 +134,32 @@ export const updateYeniPozisyonlar = async (oyuncuId: number, pozisyonlar: { [ke
   return response.data;
 };
 
+// Kaleci yeteneklerini getir
+export async function getKaleciYetenekleri(oyuncuId: number): Promise<KaleciYetenekleri> {
+  try {
+    console.log('API Call: getKaleciYetenekleri', { oyuncuId })
+    const response = await axios.get(`${API_URL}/kaleci-yetenekleri/${oyuncuId}`)
+    console.log('API Response:', response.data)
+    return response.data
+  } catch (error) {
+    console.error('API Error:', error)
+    throw error
+  }
+}
+
+// Kaleci yeteneklerini güncelle
+export async function updateKaleciYetenekleri(oyuncuId: number, yetenekler: KaleciYetenekleri): Promise<{ kaleciGucu: number }> {
+  try {
+    console.log('API Call: updateKaleciYetenekleri', { oyuncuId, yetenekler })
+    const response = await axios.put(`${API_URL}/kaleci-yetenekleri/${oyuncuId}`, yetenekler)
+    console.log('API Response:', response.data)
+    return response.data
+  } catch (error) {
+    console.error('API Error:', error)
+    throw error
+  }
+}
+
 export interface Api {
   getOyuncular(): Promise<Oyuncu[]>
   createOyuncu(oyuncu: Omit<Oyuncu, 'id'>): Promise<Oyuncu>
@@ -127,6 +176,8 @@ export interface Api {
   getMevkiKatsayilari(mevki: string): Promise<MevkiKatsayi[]>
   executeQueryById(oyuncuId: number, q_id: number): Promise<number>
   updateYeniPozisyonlar(oyuncuId: number, pozisyonlar: { [key: string]: number }): Promise<any>
+  getKaleciYetenekleri(oyuncuId: number): Promise<KaleciYetenekleri>
+  updateKaleciYetenekleri(oyuncuId: number, yetenekler: KaleciYetenekleri): Promise<{ kaleciGucu: number }>
 }
 
 const api: Api = {
@@ -255,6 +306,28 @@ const api: Api = {
       console.error('API - getYeniPozisyonlar hatası:', error);
       return {};
     }
+  },
+  async getKaleciYetenekleri(oyuncuId: number): Promise<KaleciYetenekleri> {
+    try {
+      console.log('API Call: getKaleciYetenekleri', { oyuncuId })
+      const response = await axios.get(`${API_URL}/kaleci-yetenekleri/${oyuncuId}`)
+      console.log('API Response:', response.data)
+      return response.data
+    } catch (error) {
+      console.error('API Error:', error)
+      throw error
+    }
+  },
+  async updateKaleciYetenekleri(oyuncuId: number, yetenekler: KaleciYetenekleri): Promise<{ kaleciGucu: number }> {
+    try {
+      console.log('API Call: updateKaleciYetenekleri', { oyuncuId, yetenekler })
+      const response = await axios.put(`${API_URL}/kaleci-yetenekleri/${oyuncuId}`, yetenekler)
+      console.log('API Response:', response.data)
+      return response.data
+    } catch (error) {
+      console.error('API Error:', error)
+      throw error
+    }
   }
 }
 
@@ -274,5 +347,7 @@ export default {
   executeQueryById,
   updateYeniPozisyonlar,
   getMevkiKatsayilari: api.getMevkiKatsayilari,
-  getYeniPozisyonlar: api.getYeniPozisyonlar
+  getYeniPozisyonlar: api.getYeniPozisyonlar,
+  getKaleciYetenekleri,
+  updateKaleciYetenekleri
 }; 
