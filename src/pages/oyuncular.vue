@@ -548,10 +548,12 @@
         <VCardActions>
           <VSpacer />
           <VBtn color="error" @click="kaleciYetenekleriDialog.show = false">İptal</VBtn>
+          
           <VBtn 
             color="success" 
             :loading="kaleciYetenekleriDialog.kaydediliyor"
             @click="kaleciYetenekleriKaydet"
+            
           >
             Kaydet
           </VBtn>

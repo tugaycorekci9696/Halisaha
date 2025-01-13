@@ -161,7 +161,7 @@
                         <VIcon v-else icon="tabler-user" />
                       </VAvatar>
                       <div class="player-name">{{ getIlkIsim(takimA.oyuncular[pos][index+4].adSoyad) }}</div>
-              </div>
+                    </div>
                     <div v-else class="empty-slot">
                       <span class="position-text">{{ pos }}</span>
                     </div>
